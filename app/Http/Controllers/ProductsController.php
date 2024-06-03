@@ -268,6 +268,7 @@ class ProductsController extends Controller
     ], 200);
 }
 
+
     public function ExtraProducts()
     {
         $user = Auth::user();
