@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreign('classification_id')->references('id')->on('classifications')->onDelete('cascade');
             $table->unsignedBigInteger('product_id');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
-            $table->boolean('displayOrNot')->default(true);
+ 
             $table->timestamps();
         });
     }

@@ -133,19 +133,23 @@ class ProductsController extends Controller
     public function updateProduct(Request $request, $product_id)
     {
         $product = Product::findOrFail($product_id);
+
         $request->validate([
             'name' => 'required|unique:products,name,' . $product->id,
             'price' => 'required|numeric',
             'description' => 'required',
-            'classifications' => 'required|array',
-            'classifications.*' => 'required|string',
+            'is_public' => 'required|boolean',
+            'classifications' => 'required_if:is_public,false|array',
+            'classifications.*' => 'required_if:is_public,false|string',
             'type' => 'nullable|string',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:png,jpg,jpeg,webp',
             'delete_images' => 'nullable|array',
         ]);
 
+        $images = [];
 
+        // Delete existing images
         $existingImages = json_decode($product->images, true);
         foreach ($existingImages as $image) {
             $imagePath = 'uploads/Products/' . $image;
@@ -154,15 +158,15 @@ class ProductsController extends Controller
             }
         }
 
-        // $images = json_decode($product->images, true);
         // Upload new images
-        $images = [];
-        foreach ($request->file('images') as $file) {
-            $extension = $file->getClientOriginalExtension();
-            $filename = uniqid() . '.' . $extension;
-            $path = 'uploads/Products/';
-            $file->move($path, $filename);
-            $images[] = $filename;
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                $extension = $file->getClientOriginalExtension();
+                $filename = uniqid() . '.' . $extension;
+                $path = 'uploads/Products/';
+                $file->move($path, $filename);
+                $images[] = $filename;
+            }
         }
 
         $product->update([
@@ -171,15 +175,18 @@ class ProductsController extends Controller
             'type' => $request->type,
             'description' => $request->input('description'),
             'images' => json_encode($images),
+            'is_public' => $request->is_public,
         ]);
 
-     
+        // Update ClassificationProduct pivot table
         ClassificationProduct::where('product_id', $product->id)->delete();
-        foreach ($request->input('classifications') as $classification) {
-            ClassificationProduct::create([
-                'classification_id' => $classification,
-                'product_id' => $product->id,
-            ]);
+        if (!$request->is_public) {
+            foreach ($request->input('classifications') as $classification) {
+                ClassificationProduct::create([
+                    'classification_id' => $classification,
+                    'product_id' => $product->id,
+                ]);
+            }
         }
 
         return response()->json([
@@ -187,7 +194,6 @@ class ProductsController extends Controller
             'product' => $product,
         ], 200);
     }
-
 
     public function deleteProduct($product_id)
     {
@@ -230,43 +236,32 @@ class ProductsController extends Controller
         ], 200);
     }
     //////////////////////////////////////
-   
+
     public function sukerProducts()
-{
-    $user = Auth::user();
-    $classification_id = $user->classification_id;
+    {
+        $user = Auth::user();
+        $classification_id = $user->classification_id;
 
-    $essentialProducts1 = Product::where(function ($q) {
-        $q->where('type', 'essential')
-        ->orWhere('is_public', true);
-    })->get();
+        $products = Product::where('displayOrNot', true)
+            ->where(function ($query) use ($classification_id) {
+                $query->where('is_public', true)
+                    ->orWhereHas('classification', function ($q) use ($classification_id) {
+                        $q->where('classification_id', $classification_id);
+                        // ->where('displayOrNot', true);
+                    });
+            })
+            ->where('type', 'essential')
+            ->get();
+        if ($products->isEmpty()) {
+            return response()->json([
+                'message' => 'There are no essential or public products that are set to display for your classification',
+            ], 404);
+        }
 
-    $essentialProducts2 = ClassificationProduct::where('classification_id', $classification_id)
-        ->where('displayOrNot', true)
-        ->pluck('product_id')
-        ->toArray();
-
-    $essentialProducts = $essentialProducts1->whereIn('id', $essentialProducts2);
-
-    $publicProducts = Product::where('type', 'essential')->where('is_public', true)
-        ->whereDoesntHave('classification', function ($query) use ($classification_id) {
-            $query->where('classification_id', $classification_id)
-                ->where('displayOrNot', true);
-        })
-        ->get();
-
-    $allProducts = $essentialProducts->merge($publicProducts);
-
-    if ($allProducts->isEmpty()) {
         return response()->json([
-            'message' => 'There are no essential or public products that are set to display for your classification',
-        ], 404);
+            'theEssentialProducts' => $products,
+        ], 200);
     }
-
-    return response()->json([
-        'theEssentialProducts' => $allProducts,
-    ], 200);
-}
 
 
     public function ExtraProducts()
@@ -274,15 +269,25 @@ class ProductsController extends Controller
         $user = Auth::user();
         $classification_id = $user->classification_id;
 
-        $products = Product::where('type', 'extra')
-            ->whereHas('classification', function ($query) use ($classification_id) {
-                $query->where('classification_products.classification_id', $classification_id)
-                    ->where('classification_products.displayOrNot', true);
-            })->orWhere('is_public', true)->where('type', 'extra')
+        $products = Product::where('displayOrNot', true)
+            ->where(function ($query) use ($classification_id) {
+                $query->where('is_public', true)
+                    ->orWhereHas('classification', function ($q) use ($classification_id) {
+                        $q->where('classification_id', $classification_id);
+                        // ->where('displayOrNot', true);
+                    });
+            })
+            ->where('type', 'extra')
             ->get();
 
+        if ($products->isEmpty()) {
+            return response()->json([
+                'message' => 'There are no extra or public products that are set to display for your classification',
+            ], 404);
+        }
+
         return response()->json([
-            'the Extra Products :' => $products
+            'theExtraProducts' => $products,
         ], 200);
     }
 
@@ -365,6 +370,60 @@ class ProductsController extends Controller
     //         ], 404);
     //     }
 
+    //     return response()->json([
+    //         'theEssentialProducts' => $allProducts,
+    //     ], 200);
+    // }
+
+    // public function sukerProducts()
+    // {
+    //     $user = Auth::user();
+    //     $classification_id = $user->classification_id;
+    
+    //     $essentialProducts1 = Product::where(function ($q) {
+    //         $q->where('type', 'essential')->where('displayOrNot',true)
+    //         ->orWhere('is_public', true);
+    //     })->get();
+    
+    //     $essentialProducts2 = ClassificationProduct::where('classification_id', $classification_id)
+    //         ->where('displayOrNot', true)
+    //         ->pluck('product_id')
+    //         ->toArray();
+    
+    //     $essentialProducts = $essentialProducts1->whereIn('id', $essentialProducts2);
+    // /////////////////
+    //     $publicProducts = Product::where('type', 'essential')
+    //                             ->where('is_public', true)
+    //                             ->where('displayOrNot',true)
+    //                     ->whereDoesntHave('classification', function ($query) use ($classification_id) {
+    //             $query->where('classification_id', $classification_id)
+    //                 ->where('displayOrNot', true);
+    //         })
+    //         ->get();
+    
+    //     $allProducts = $essentialProducts->merge($publicProducts);
+    
+    // $user = Auth::user();
+    // $classification_id = $user->classification_id;
+    
+    // $products = Product::where('displayOrNot', true)
+    //     ->where(function ($query) use ($classification_id) {
+    //         $query->where('is_public', true)
+    //               ->orWhereHas('classification', function ($q) use ($classification_id) {
+    //                   $q->where('classification_id', $classification_id)
+    //                      ->where('displayOrNot', true);
+    //               });
+    //     })
+    //     ->where('type', 'essential')
+    //     ->get();
+    
+    
+    //     if ($allProducts->isEmpty()) {
+    //         return response()->json([
+    //             'message' => 'There are no essential or public products that are set to display for your classification',
+    //         ], 404);
+    //     }
+    
     //     return response()->json([
     //         'theEssentialProducts' => $allProducts,
     //     ], 200);

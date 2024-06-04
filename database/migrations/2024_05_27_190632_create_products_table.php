@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('description');
             $table->string('images');
             $table->boolean('is_public')->default(false);
+            $table->boolean('displayOrNot')->default(true);
             $table->timestamps();
         });
     }
