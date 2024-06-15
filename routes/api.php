@@ -56,13 +56,13 @@ Route::delete('/productsDelete/{id}', [ProductController::class, 'deleteProduct'
 ///////////////////////
 Route::post('/AddPointsProduct',[PointsProductController::class,'AddPointsProduct']);
 
-Route::get('/PointsProdctDetails/{id}', [PointsProductController::class, 'PointsProdctDetails']);
+Route::get('/PointsProductDetails/{id}', [PointsProductController::class, 'PointsProductDetails']);
 
-Route::post('/PointsProdctUpdate/{id}', [PointsProductController::class, 'updatePointsProdct']);
+Route::post('/updatePointsProduct/{id}', [PointsProductController::class, 'updatePointsProduct']);
 
-Route::post('/onOffPointsProdct/{id}', [PointsProductController::class, 'onOffPointsProdct']);
+Route::post('/onOffPointsProduct/{id}', [PointsProductController::class, 'onOffPointsProduct']);
 
-Route::delete('/PointsProdctDelete/{id}', [PointsProductController::class, 'deletePointsProdct']);
+Route::delete('/deletePointsProduct/{id}', [PointsProductController::class, 'deletePointsProduct']);
 
 Route::get('/sukerProductsAdmin', [ProductController::class, 'sukerProductsAdmin']);
 Route::get('/sukerProducts', [ProductController::class, 'sukerProducts'])->middleware('auth:api');;

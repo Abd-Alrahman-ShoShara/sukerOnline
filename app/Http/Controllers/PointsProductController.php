@@ -48,7 +48,7 @@ class PointsProductController extends Controller
 
 
 
-    public function pointsProdctDetails($pointsProduct_id)
+    public function pointsProductDetails($pointsProduct_id)
     {
         $pointsProduct = PointsProduct::find($pointsProduct_id);
 
@@ -65,7 +65,7 @@ class PointsProductController extends Controller
     }
 
 
-    public function updatePointsProdct(Request $request, $pointsProduct_id)
+    public function updatePointsProduct(Request $request, $pointsProduct_id)
     {
         $PointsProduct = PointsProduct::findOrFail($pointsProduct_id);
 
@@ -79,7 +79,7 @@ class PointsProductController extends Controller
 
         $imageUrls = [];
         if ($request->hasFile('images')) {
-            // Delete old images
+            
             $oldImages = json_decode($PointsProduct->images, true);
             if ($oldImages) {
                 foreach ($oldImages as $oldImage) {
@@ -113,14 +113,14 @@ class PointsProductController extends Controller
         ], 200);
     }
 
-    public function deletePointsProdct($PointsProduct_id)
+    public function deletePointsProduct($PointsProduct_id)
     {
         $PointsProduct = PointsProduct::findOrFail($PointsProduct_id);
         $PointsProduct->delete();
 
         return response()->json(['message' => 'Product deleted successfully'], 200);
     }
-    public function onOffProduct($pointsProduct_id)
+    public function onOffPointsProduct($pointsProduct_id)
     {
         $PointsProduct = PointsProduct::findOrFail($pointsProduct_id);
 
