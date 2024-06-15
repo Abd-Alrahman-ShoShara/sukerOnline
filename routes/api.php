@@ -2,7 +2,8 @@
 
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ClassificationController;
-use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\PointsProductController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -43,22 +44,31 @@ Route::post('/resatPassword',[AuthenticationController::class,'resatPassword']);
 
 //////////////////////////////////////////////////////////////////////////////// for products
 
-Route::post('/AddProduct',[ProductsController::class,'AddProduct']);
+Route::post('/AddProduct',[ProductController::class,'AddProduct']);
 
-Route::get('/sukerProductsAdmin', [ProductsController::class, 'sukerProductsAdmin']);
-Route::get('/sukerProducts', [ProductsController::class, 'sukerProducts'])->middleware('auth:api');;
+Route::get('/ProdctsDetails/{id}', [ProductController::class, 'ProdctsDetails']);
 
-Route::get('/ExtraProductsAdmin', [ProductsController::class, 'ExtraProductsAdmin']);
-Route::get('/ExtraProducts', [ProductsController::class, 'ExtraProducts'])->middleware('auth:api');
+Route::post('/productsUpdate/{id}', [ProductController::class, 'updateProduct']);
 
-Route::get('/ProdctsDetails/{id}', [ProductsController::class, 'ProdctsDetails']);
+Route::post('/onOffProduct/{id}', [ProductController::class, 'onOffProduct']);
 
-Route::post('/productsUpdate/{id}', [ProductsController::class, 'updateProduct']);
+Route::delete('/productsDelete/{id}', [ProductController::class, 'deleteProduct']);
+///////////////////////
+Route::post('/AddPointsProduct',[PointsProductController::class,'AddPointsProduct']);
 
-Route::post('/onOffProduct/{id}', [ProductsController::class, 'onOffProduct']);
+Route::get('/PointsProdctDetails/{id}', [PointsProductController::class, 'PointsProdctDetails']);
 
-Route::delete('/productsDelete/{id}', [ProductsController::class, 'deleteProduct']);
+Route::post('/PointsProdctUpdate/{id}', [PointsProductController::class, 'updatePointsProdct']);
 
+Route::post('/onOffPointsProdct/{id}', [PointsProductController::class, 'onOffPointsProdct']);
+
+Route::delete('/PointsProdctDelete/{id}', [PointsProductController::class, 'deletePointsProdct']);
+
+Route::get('/sukerProductsAdmin', [ProductController::class, 'sukerProductsAdmin']);
+Route::get('/sukerProducts', [ProductController::class, 'sukerProducts'])->middleware('auth:api');;
+
+Route::get('/ExtraProductsAdmin', [ProductController::class, 'ExtraProductsAdmin']);
+Route::get('/ExtraProducts', [ProductController::class, 'ExtraProducts'])->middleware('auth:api');
 /////////////////////////////////////////////////////////////////////////////////// classification
 
 Route::post('/AddClassification',[ClassificationController::class,'AddClassification']);

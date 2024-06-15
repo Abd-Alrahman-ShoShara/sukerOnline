@@ -11,16 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('products', function (Blueprint $table) {
+        Schema::create('points_products', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->double('price');
-            $table->enum('type',['essential','extra','pointProduct'])->default('essential');
             $table->string('description');
             $table->string('images');
-            $table->integer('Points');
-            $table->boolean('is_public')->default(false);
-            $table->boolean('displayOrNot')->default(true);
+            $table->boolean('displayOrNot')->default(false);
             $table->timestamps();
         });
     }
@@ -30,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('products');
+        Schema::dropIfExists('points_products');
     }
 };

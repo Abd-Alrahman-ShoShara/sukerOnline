@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Product extends Model
+class PointsProduct extends Model
 {
     use HasFactory;
     protected $fillable =[
@@ -13,8 +13,6 @@ class Product extends Model
         'description',
         'price',
         'images',
-        'type',
-        'is_public',
         'points',
         'displayOrNot',
     ];
@@ -23,12 +21,4 @@ class Product extends Model
         'created_at',
         'updated_at',
     ];
-    public function classificationProduct(){
-        return $this->hasMany(ClassificationProduct::class,'classification_id');
-    }
-    public function classification()
-    {
-        return $this->belongsToMany(Classification::class, 'classification_products');
-    }
-    
 }
