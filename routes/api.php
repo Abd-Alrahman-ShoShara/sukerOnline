@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ClassificationController;
 use App\Http\Controllers\PointsProductController;
@@ -68,3 +69,5 @@ Route::get('/allClassifications',[ClassificationController::class,'allClassifica
 Route::delete('/deleteClassification/{classification_id}',[ClassificationController::class,'deleteClassification']);
 
 //////////////////////////////////////////////////////////////////////////////////////
+Route::post('/updateWorkTime', [AttributeController::class, 'updateWorkTime']);
+Route::get('/getWorkTime', [AttributeController::class, 'getWorkTime']);
