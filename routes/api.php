@@ -45,36 +45,26 @@ Route::post('/resatPassword',[AuthenticationController::class,'resatPassword']);
 //////////////////////////////////////////////////////////////////////////////// for products
 
 Route::post('/AddProduct',[ProductController::class,'AddProduct']);
-
 Route::get('/ProdctsDetails/{id}', [ProductController::class, 'ProdctsDetails']);
-
 Route::post('/productsUpdate/{id}', [ProductController::class, 'updateProduct']);
-
 Route::post('/onOffProduct/{id}', [ProductController::class, 'onOffProduct']);
-
 Route::delete('/productsDelete/{id}', [ProductController::class, 'deleteProduct']);
-///////////////////////
+
+
 Route::post('/AddPointsProduct',[PointsProductController::class,'AddPointsProduct']);
-
 Route::get('/PointsProductDetails/{id}', [PointsProductController::class, 'PointsProductDetails']);
-
 Route::post('/updatePointsProduct/{id}', [PointsProductController::class, 'updatePointsProduct']);
-
 Route::post('/onOffPointsProduct/{id}', [PointsProductController::class, 'onOffPointsProduct']);
-
 Route::delete('/deletePointsProduct/{id}', [PointsProductController::class, 'deletePointsProduct']);
 
-Route::get('/sukerProductsAdmin', [ProductController::class, 'sukerProductsAdmin']);
-Route::get('/sukerProducts', [ProductController::class, 'sukerProducts'])->middleware('auth:api');;
+Route::get('/productsAdmin/{type}', [ProductController::class, 'productsAdmin']);
+Route::get('/Products/{type}', [ProductController::class, 'Products'])->middleware('auth:api');;
 
-Route::get('/ExtraProductsAdmin', [ProductController::class, 'ExtraProductsAdmin']);
-Route::get('/ExtraProducts', [ProductController::class, 'ExtraProducts'])->middleware('auth:api');
+
 /////////////////////////////////////////////////////////////////////////////////// classification
 
 Route::post('/AddClassification',[ClassificationController::class,'AddClassification']);
-
 Route::get('/allClassifications',[ClassificationController::class,'allClassifications']);
-
 Route::delete('/deleteClassification/{classification_id}',[ClassificationController::class,'deleteClassification']);
 
 //////////////////////////////////////////////////////////////////////////////////////

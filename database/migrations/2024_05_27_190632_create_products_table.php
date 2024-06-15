@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->double('price');
-            $table->enum('type',['essential','extra','pointProduct'])->default('essential');
+            $table->enum('type',['essential','extra'])->default('essential');
             $table->string('description');
             $table->string('images');
             $table->integer('Points');

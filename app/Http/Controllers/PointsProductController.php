@@ -38,15 +38,11 @@ class PointsProductController extends Controller
             'images' => json_encode($images),
         ]);
 
-
         return response()->json([
             'message' => 'Product created successfully',
             'pointsProduct' => $pointsProduct,
         ], 201);
     }
-
-
-
 
     public function pointsProductDetails($pointsProduct_id)
     {
@@ -73,7 +69,6 @@ class PointsProductController extends Controller
             'name' => 'required|unique:products,name,' . $PointsProduct->id,
             'price' => 'required|numeric',
             'description' => 'required',
-
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
         ]);
 
@@ -120,6 +115,7 @@ class PointsProductController extends Controller
 
         return response()->json(['message' => 'Product deleted successfully'], 200);
     }
+
     public function onOffPointsProduct($pointsProduct_id)
     {
         $PointsProduct = PointsProduct::findOrFail($pointsProduct_id);

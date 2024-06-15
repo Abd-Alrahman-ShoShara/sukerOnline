@@ -161,37 +161,24 @@ class ProductController extends Controller
 
     ////////////////////////////////////////
 
-    public function sukerProductsAdmin()
+    public function productsAdmin($type)
     {
-        $sukerProducts = Product::where('type', 'essential')->get();
+        $sukerProducts = Product::where('type',$type)->get();
   
         if ($sukerProducts->isEmpty()) {
             return response()->json([
-                'message' => 'There are no essential products',
+                'message' => 'There are no '.$type.' products',
             ], 404);
         }
 
         return response()->json([
-            'theEssentialProducts' => $sukerProducts,
+            'the_'.$type.'_products' => $sukerProducts,
         ], 200);
     }
-    public function ExtraProductsAdmin()
-    {
-        $extraProducts = Product::where('type', 'extra')->get();
-
-        if ($extraProducts->isEmpty()) {
-            return response()->json([
-                'message' => 'There are no extra products',
-            ], 404);
-        }
-
-        return response()->json([
-            'theExtraProducts' => $extraProducts,
-        ], 200);
-    }
+   
     //////////////////////////////////////
 
-    public function sukerProducts()
+    public function Products($type)
     {
         $user = Auth::user();
         $classification_id = $user->classification_id;
@@ -204,48 +191,18 @@ class ProductController extends Controller
                         // ->where('displayOrNot', true);
                     });
             })
-            ->where('type', 'essential')
+            ->where('type', $type)
             ->get();
         if ($products->isEmpty()) {
             return response()->json([
-                'message' => 'There are no essential or public products that are set to display for your classification',
+                'message' => 'There are no '. $type .' products that are set to display for your classification',
             ], 404);
         }
 
         return response()->json([
-            'theEssentialProducts' => $products,
+            'the_'.$type.'_products' => $products,
         ], 200);
     }
-
-
-    public function ExtraProducts()
-    {
-        $user = Auth::user();
-        $classification_id = $user->classification_id;
-
-        $products = Product::where('displayOrNot', true)
-            ->where(function ($query) use ($classification_id) {
-                $query->where('is_public', true)
-                    ->orWhereHas('classification', function ($q) use ($classification_id) {
-                        $q->where('classification_id', $classification_id);
-                        // ->where('displayOrNot', true);
-                    });
-            })
-            ->where('type', 'extra')
-            ->get();
-
-        if ($products->isEmpty()) {
-            return response()->json([
-                'message' => 'There are no extra or public products that are set to display for your classification',
-            ], 404);
-        }
-
-        return response()->json([
-            'theExtraProducts' => $products,
-        ], 200);
-    }
-
-
 
     public function onOffProduct($product_id)
     {
@@ -257,6 +214,19 @@ class ProductController extends Controller
 
         return response()->json([
             'afterUpdate' => $classificationProduct->fresh(),
+        ]);
+    }
+
+    public function searchProduct($name){
+        $theCity= Product::where('name','like','%' . $name . '%')->get();
+        return response()->json([
+            'the Cities :' => $theCity,
+        ]);
+    }
+    public function searchPoinstProduct($name){
+        $theCity= Product::where('name','like','%' . $name . '%')->get();
+        return response()->json([
+            'the Cities :' => $theCity,
         ]);
     }
 }
