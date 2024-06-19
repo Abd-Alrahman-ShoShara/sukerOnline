@@ -13,8 +13,7 @@ class OrdersController extends Controller
     public function createOrder(Request $request)
     {
         $request->validate([]);
-        
-        
+
         $order = Order::create([
             'user_id' => Auth::user()->id,
         ]);
@@ -107,34 +106,6 @@ class OrdersController extends Controller
         }
     }
 
-
-    // public function paidOrder($id)
-    // {
-    //     $accOrder = Order::where([
-    //         ['id' , $id],
-    //         ['payment_state','unpaid']
-    //         ])->first();
-    //     // dd($accOrder);
-
-    //     if ($accOrder) {
-    //         $accOrder->update(['payment_state' => 'paid']);
-
-    //         $phar_id=$accOrder->user_id;
-    //         $phar=Order::find($id);
-    //         $user = DB::table('users')->where('id',$phar->user_id)->first();
-    //         $token=$user->notiToken;
-    //         // dd($token);
-    //         $this->noti("your order is paid ",$token);
-
-    //         return response([
-    //             'message' => 'the order accepted',
-    //             'state' => 'paid'
-    //         ],200);
-    //     }
-    //     else{
-    //         return response()->json(['message' => 'it is not possible to edit due to paid'], 403);
-    //     }
-    // }
 
     // public function report(Request $request)
     //     {

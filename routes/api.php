@@ -71,3 +71,9 @@ Route::delete('/deleteClassification/{classification_id}',[ClassificationControl
 //////////////////////////////////////////////////////////////////////////////////////
 Route::post('/updateWorkTime', [AttributeController::class, 'updateWorkTime']);
 Route::get('/getWorkTime', [AttributeController::class, 'getWorkTime']);
+
+Route::post('/updateStorePrice', [AttributeController::class, 'updateStorePrice']);
+Route::get('/getPrices', [AttributeController::class, 'getPrices']);
+
+Route::post('/updateUrgentPrice', [AttributeController::class, 'updateUrgentPrice']);
+
