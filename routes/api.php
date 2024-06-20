@@ -3,6 +3,7 @@
 use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ClassificationController;
+use App\Http\Controllers\OrdersController;
 use App\Http\Controllers\PointsProductController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
@@ -59,7 +60,7 @@ Route::post('/onOffPointsProduct/{id}', [PointsProductController::class, 'onOffP
 Route::delete('/deletePointsProduct/{id}', [PointsProductController::class, 'deletePointsProduct']);
 
 Route::get('/productsAdmin/{type}', [ProductController::class, 'productsAdmin']);
-Route::get('/Products/{type}', [ProductController::class, 'Products'])->middleware('auth:api');;
+Route::get('/Products/{type}', [ProductController::class, 'Products'])->middleware('auth:api');
 
 
 /////////////////////////////////////////////////////////////////////////////////// classification
@@ -73,7 +74,14 @@ Route::post('/updateWorkTime', [AttributeController::class, 'updateWorkTime']);
 Route::get('/getWorkTime', [AttributeController::class, 'getWorkTime']);
 
 Route::post('/updateStorePrice', [AttributeController::class, 'updateStorePrice']);
+Route::post('/updateUrgentPrice', [AttributeController::class, 'updateUrgentPrice']);
 Route::get('/getPrices', [AttributeController::class, 'getPrices']);
 
-Route::post('/updateUrgentPrice', [AttributeController::class, 'updateUrgentPrice']);
+
+//////////////////////////////////////////////////////////////////////////////////
+
+Route::post('/createEssentialOrder', [OrdersController::class, 'createEssentialOrder'])->middleware('auth:api');
+Route::get('/orderDetails/{order_id}', [OrdersController::class, 'orderDetails']);
+Route::delete('/deleteOrder/{order_id}', [OrdersController::class, 'deleteOrder']);
+
 

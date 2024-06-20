@@ -7,5 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class StoredOrder extends Model
 {
+    protected $fillable = [
+        'order_id',
+        'storingTime',
+    ];
     use HasFactory;
 }

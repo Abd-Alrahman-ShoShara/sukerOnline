@@ -18,8 +18,8 @@ class Cart extends Model
         'updated_at',
     ];
 
-    public function classificationProducts(){
-        return $this->belongsTo(ClassificationProduct::class);
+    public function Product(){
+        return $this->belongsTo(Product::class);
     }
     public function order(){
         return $this->belongsTo(Order::class);
