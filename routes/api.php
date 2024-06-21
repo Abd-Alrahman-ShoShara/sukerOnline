@@ -90,3 +90,5 @@ Route::post('/createExtraOrder', [OrdersController::class, 'createExtraOrder'])-
 Route::post('/preparingOrder/{order_id}', [OrdersController::class, 'preparingOrder']);
 Route::post('/sentOrder/{order_id}', [OrdersController::class, 'sentOrder']);
 Route::post('/receivedOrder/{order_id}', [OrdersController::class, 'receivedOrder']);
+
+Route::get('/ordresOfuser', [OrdersController::class, 'ordresOfuser'])->middleware('auth:api');

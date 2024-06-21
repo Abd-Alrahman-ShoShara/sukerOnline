@@ -69,6 +69,7 @@ class OrdersController extends Controller
             'theOrder'=>$order,
         ]);
     }
+
     public function createExtraOrder(Request $request)
     {
         $request->validate([
@@ -119,7 +120,7 @@ class OrdersController extends Controller
         ], 200);
     }
 
-    public function ordreOfuser()
+    public function ordresOfuser()
     {
         return response([
             'orders' => Order::where('user_id', auth()->user()->id)->get()
