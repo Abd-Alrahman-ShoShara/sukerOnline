@@ -84,4 +84,9 @@ Route::post('/createEssentialOrder', [OrdersController::class, 'createEssentialO
 Route::get('/orderDetails/{order_id}', [OrdersController::class, 'orderDetails']);
 Route::delete('/deleteOrder/{order_id}', [OrdersController::class, 'deleteOrder']);
 
+Route::post('/createExtraOrder', [OrdersController::class, 'createExtraOrder'])->middleware('auth:api');
 
+
+Route::post('/preparingOrder/{order_id}', [OrdersController::class, 'preparingOrder']);
+Route::post('/sentOrder/{order_id}', [OrdersController::class, 'sentOrder']);
+Route::post('/receivedOrder/{order_id}', [OrdersController::class, 'receivedOrder']);

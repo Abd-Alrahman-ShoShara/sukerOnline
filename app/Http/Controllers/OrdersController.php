@@ -69,12 +69,32 @@ class OrdersController extends Controller
             'theOrder'=>$order,
         ]);
     }
-
-    public function ordreOfuser()
+    public function createExtraOrder(Request $request)
     {
-        return response([
-            'orders' => Order::where('user_id', auth()->user()->id)->get()
-        ], 200);
+        $request->validate([
+            'products.*' => 'required|array',
+        ]);
+       
+        $order = Order::create([
+            'user_id' => Auth::user()->id,
+        ]);
+        $totalPrice=0;
+        
+        foreach ($request->products as $product) {
+            Cart::create([
+                'order_id' => $order->id,
+                'product_id' => $product['product_id'],
+                'quantity' => $product['quantity'],
+            ]);
+            $productPrice = Product::find($product['product_id'])->price;
+            $totalPrice += $productPrice * $product['quantity'];
+        }
+        $order->totalPrice = $totalPrice ;
+        $order->save();
+
+        return response()->json([
+            'theOrder'=>$order,
+        ]);
     }
 
     public function orderDetails($order_id)
@@ -99,108 +119,66 @@ class OrdersController extends Controller
         ], 200);
     }
 
+    public function ordreOfuser()
+    {
+        return response([
+            'orders' => Order::where('user_id', auth()->user()->id)->get()
+        ], 200);
+    }
 
-//     public function preparingOrder($id)
-//     {
-//         $accOrder = Order::where(['id' => $id, 'state' => 'pending'])->first();
+    public function preparingOrder($order_id)
+    {
+        $order = Order::where(['id' => $order_id, 'state' => 'underConstuction'])->first();
 
-//         if ($accOrder) {
-//             $accOrder->update(['state' => 'preparing']);
+        if ($order) {
+            $order->update(['state' => 'preparing']);
+            return response()->json([
+                'message' => 'order state is updating successfully'
+            ], 403);
+        } else {
+            return response()->json([
+                'message' => 'it is not possible to edit due to preparing'
+            ], 403);
+        }
+    }
 
-//             $phar_id = $accOrder->user_id;
-//             $phar = User::find($phar_id);
-//             $token = $phar->notiToken;
-//             $this->noti("your order is preparing", $token);
-//             return response([
-//                 'message' => 'the order accepted',
-//                 'state' => 'preparing'
-//             ], 200);
-//         } else {
-//             return response()->json(['message' => 'it is not possible to edit due to preparing'], 403);
-//         }
-//     }
+    public function sentOrder($order_id)
+    {
+        $order = Order::where([['id', $order_id], ['state', 'preparing']])->first();
 
-//     public function has_been_sentOrder($order_id)
-//     {
-//         $accOrder = Order::where([['id', $order_id], ['state', 'preparing']])->first();
-
-//         if ($accOrder) {
-//             $accOrder->update(['state' => 'has_been_sent']);
+        if ($order) {
+            $order->update(['state' => 'sent']);
             
-//             return response([
-//                 'message' => 'the order accepted',
-//                 'state' => 'has_been_sent'
-//             ], 200);
-//         } else {
-//             return response()->json(['message' => 'it is not possible to edit due to has_been_sent'], 403);
-//         }
-//     }
+            return response([
+                'message' => 'the order accepted',
+                'state' => 'has_been_sent'
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'it is not possible to edit due to has_been_sent'
+            ], 403);
+        }
+    }
 
-//     public function receivedOrder($id)
-//     {
-//         $accOrder = Order::where(['id' => $id, 'state' => 'has_been_sent'])->first();
+    public function receivedOrder($order_id)
+    {
+        $order = Order::where(['id' => $order_id, 'state' => 'sent'])->first();
 
-//         if ($accOrder) {
-//             $accOrder->update(['state' => 'received']);
+        if ($order) {
+            $order->update(['state' => 'received']);
 
-//             return response([
-//                 'message' => 'the order accepted',
-//                 'state' => 'received'
-//             ], 200);
-//         } else {
-//             return response()->json(['message' => 'it is not possible to edit due to received'], 403);
-//         }
-//     }
+            return response([
+                'message' => 'the order accepted',
+                'state' => 'received'
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'it is not possible to edit due to received'
+            ], 403);
+        }
+    }
 
 
-//     public function createOrders(Request $request)
-// {
-//     $user = Auth::user();
-
-//     // Validate the request
-//     $request->validate([
-//         'products' => 'required|array',
-//         'products.*' => 'required|integer|exists:classification_products,id',
-//         'type' => 'required|in:urgent,regular,stored',
-//     ]);
-
-//     // Check if the order contains only essential products
-//     $essentialProductIds = ClassificationProduct::where('classification_id', 1)->pluck('id')->toArray();
-//     $orderProductIds = $request->input('products');
-//     $isEssentialOnly = count(array_diff($orderProductIds, $essentialProductIds)) === 0;
-
-//     // Determine the order type based on the product types and the user's request
-//     if ($isEssentialOnly && $request->input('type') === 'urgent') {
-//         $orderType = 'urgent';
-//     } elseif ($isEssentialOnly && $request->input('type') === 'stored') {
-//         $orderType = 'stored';
-//     } else {
-//         $orderType = 'regular';
-//     }
-
-//     // Create the order
-//     $order = Order::create([
-//         'user_id' => $user->id,
-//         'type' => $orderType,
-//         'state' => 'underConstuction',
-//     ]);
-
-//     // Add the products to the cart
-//     $cartItems = [];
-//     foreach ($orderProductIds as $productId) {
-//         $cartItems[] = [
-//             'order_id' => $order->id,
-//             'classificationProduct_id' => $productId,
-//             'quantity' => 1, // Assuming default quantity of 1 for now
-//         ];
-//     }
-//     $order->cart()->createMany($cartItems);
-
-//     return response()->json([
-//         'message' => 'Order created successfully',
-//         'order' => $order,
-//     ], 201);
-// }
 
     // public function report(Request $request)
     //     {
