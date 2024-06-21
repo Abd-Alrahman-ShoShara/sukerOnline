@@ -107,7 +107,7 @@ class OrdersController extends Controller
 
     public function deleteOrder($order_id)
     {
-        $order = Order::where(['id' => $order_id, 'state' => 'underConstuction'])->first();
+        $order = Order::where(['id' => $order_id, 'state' => 'pending'])->first();
 
         if (!$order) {
             return response()->json([
@@ -129,7 +129,7 @@ class OrdersController extends Controller
 
     public function preparingOrder($order_id)
     {
-        $order = Order::where(['id' => $order_id, 'state' => 'underConstuction'])->first();
+        $order = Order::where(['id' => $order_id, 'state' => 'pending'])->first();
 
         if ($order) {
             $order->update(['state' => 'preparing']);

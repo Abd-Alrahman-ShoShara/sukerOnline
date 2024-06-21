@@ -3,6 +3,7 @@
 use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ClassificationController;
+use App\Http\Controllers\ComplaintsAndSuggestionController;
 use App\Http\Controllers\OrdersController;
 use App\Http\Controllers\PointsProductController;
 use App\Http\Controllers\ProductController;
@@ -69,7 +70,7 @@ Route::post('/AddClassification',[ClassificationController::class,'AddClassifica
 Route::get('/allClassifications',[ClassificationController::class,'allClassifications']);
 Route::delete('/deleteClassification/{classification_id}',[ClassificationController::class,'deleteClassification']);
 
-//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////ATTRIBUTES
 Route::post('/updateWorkTime', [AttributeController::class, 'updateWorkTime']);
 Route::get('/getWorkTime', [AttributeController::class, 'getWorkTime']);
 
@@ -77,8 +78,13 @@ Route::post('/updateStorePrice', [AttributeController::class, 'updateStorePrice'
 Route::post('/updateUrgentPrice', [AttributeController::class, 'updateUrgentPrice']);
 Route::get('/getPrices', [AttributeController::class, 'getPrices']);
 
+Route::post('/updateAboutUs', [AttributeController::class, 'updateAboutUs']);
+Route::get('/getAboutUs', [AttributeController::class, 'getAboutUs']);
 
-//////////////////////////////////////////////////////////////////////////////////
+Route::post('/updatePhoneNumbers', [AttributeController::class, 'updatePhoneNumbers']);
+Route::get('/getPhoneNumbers', [AttributeController::class, 'getPhoneNumbers']);
+
+/////////////////////////////////////////////////// ORDER ///////////////////////////////
 
 Route::post('/createEssentialOrder', [OrdersController::class, 'createEssentialOrder'])->middleware('auth:api');
 Route::get('/orderDetails/{order_id}', [OrdersController::class, 'orderDetails']);
@@ -92,3 +98,8 @@ Route::post('/sentOrder/{order_id}', [OrdersController::class, 'sentOrder']);
 Route::post('/receivedOrder/{order_id}', [OrdersController::class, 'receivedOrder']);
 
 Route::get('/ordresOfuser', [OrdersController::class, 'ordresOfuser'])->middleware('auth:api');
+
+////////////////////////////////////////////////////////////// Complaints Or Suggestion //////////////////// 
+
+Route::post('/createComplaintsOrSuggestion', [ComplaintsAndSuggestionController::class, 'createComplaintsOrSuggestion'])->middleware('auth:api');
+Route::get('/ComplaintsOrSuggestionDetails/{ComplaintsOrSuggestion_id}', [ComplaintsAndSuggestionController::class, 'ComplaintsOrSuggestionDetails']);

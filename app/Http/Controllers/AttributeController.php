@@ -27,17 +27,79 @@ class AttributeController extends Controller
         ]);
     }
 
-
     public function getWorkTime()
     {
         $configPath = config_path('timeWork.json');
         $config = json_decode(File::get($configPath), true);
-
+        
         return response()->json([
             'startTime' => $config['startTime'],
             'endTime' => $config['endTime'],
         ]);
     }
+
+    public function getAboutUs()
+    {
+        $configPath = config_path('abouteUs.json');
+        $config = json_decode(File::get($configPath), true);
+
+        return response()->json([
+            'abouteUs' => $config['abouteUs'],
+        ]);
+    }
+    public function updateAboutUs(Request $request)
+    {
+        $request->validate([
+            'abouteUs' => 'required|string',
+        ]);
+
+        $configPath = config_path('abouteUs.json');
+        $config = json_decode(File::get($configPath), true);
+
+        $config['abouteUs'] = $request->abouteUs;
+        
+
+        File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
+
+        return response()->json([
+            'message' => 'abouteUs updated successfully',
+        ]);
+    }
+    public function getPhoneNumbers()
+    {
+        $configPath = config_path('phoneNumbers.json');
+        $config = json_decode(File::get($configPath), true);
+
+        return response()->json([
+            'Num1' => $config['Num1'],
+            'Num2' => $config['Num2'],
+            'Num3' => $config['Num3'],
+        ]);
+    }
+    public function updatePhoneNumbers(Request $request)
+    {
+        $request->validate([
+            'Num1' => 'required|string',
+            'Num2' => 'required|string',
+            'Num3' => 'required|string',
+        ]);
+
+        $configPath = config_path('phoneNumbers.json');
+        $config = json_decode(File::get($configPath), true);
+
+        $config['Num1'] = $request->Num1;
+        $config['Num2'] = $request->Num2;
+        $config['Num3'] = $request->Num3;
+        
+
+        File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
+
+        return response()->json([
+            'message' => 'abouteUs updated successfully',
+        ]);
+    }
+
+
     
     public function updateStorePrice(Request $request)
     {

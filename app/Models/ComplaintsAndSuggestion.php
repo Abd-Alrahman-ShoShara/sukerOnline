@@ -18,6 +18,6 @@ class ComplaintsAndSuggestion extends Model
         'updated_at',
     ];
     public function users(){
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class,'user_id');
     }
 }
