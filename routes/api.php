@@ -7,6 +7,7 @@ use App\Http\Controllers\ComplaintsAndSuggestionController;
 use App\Http\Controllers\OrdersController;
 use App\Http\Controllers\PointsProductController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\RateAndReviewController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -103,3 +104,11 @@ Route::get('/ordresOfuser', [OrdersController::class, 'ordresOfuser'])->middlewa
 
 Route::post('/createComplaintsOrSuggestion', [ComplaintsAndSuggestionController::class, 'createComplaintsOrSuggestion'])->middleware('auth:api');
 Route::get('/ComplaintsOrSuggestionDetails/{ComplaintsOrSuggestion_id}', [ComplaintsAndSuggestionController::class, 'ComplaintsOrSuggestionDetails']);
+
+Route::post('/createRateAndReview', [RateAndReviewController::class, 'createRateAndReview'])->middleware('auth:api');
+Route::get('/RateAndReviewDetails/{RateAndReview_id}', [RateAndReviewController::class, 'RateAndReviewDetails']);
+
+Route::get('/getReviewsUseer', [RateAndReviewController::class, 'getReviewsUseer']);
+Route::get('/getReviewsAdmin', [RateAndReviewController::class, 'getReviewsAdmin']);
+
+Route::post('/displayRateOrNot/{rateAndReview_id}', [RateAndReviewController::class, 'displayRateOrNot']);

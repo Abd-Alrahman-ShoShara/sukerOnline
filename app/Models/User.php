@@ -55,6 +55,9 @@ class User extends Authenticatable
     public function complaints(){
         return $this->hasMany(ComplaintsAndSuggestion::class);
     }
+    public function rateAndReview(){
+        return $this->hasMany(RateAndReview::class);
+    }
     public function classification(){
         return $this->belongsTo(Classification::class);
     }
