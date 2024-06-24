@@ -21,6 +21,7 @@ return new class extends Migration
             $table->boolean('is_verified')->default(false);
             $table->string('nameOfStore')->nullable();
             $table->string('adress')->nullable();
+            $table->integer('userPoints')->default(0);
             $table->unsignedBigInteger('classification_id')->nullable();
             $table->foreign('classification_id')->references('id')->on('classifications')->onDelete('cascade');            
             $table->rememberToken();

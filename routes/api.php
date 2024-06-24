@@ -46,6 +46,7 @@ Route::post('/verifyForgetPassword',[AuthenticationController::class,'verifyForg
 
 Route::post('/resatPassword',[AuthenticationController::class,'resatPassword']);
 
+Route::get('/userInfo', [AuthenticationController::class, 'userInfo'])->middleware('auth:api');
 //////////////////////////////////////////////////////////////////////////////// for products
 
 Route::post('/AddProduct',[ProductController::class,'AddProduct']);

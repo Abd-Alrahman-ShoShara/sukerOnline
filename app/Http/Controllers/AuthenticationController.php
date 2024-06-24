@@ -151,15 +151,15 @@ class AuthenticationController extends Controller
     }
     ///////////////////////////////////////////
     public function resatPasswordEnternal(Request $request){
-    // Validate the request data
+   
     $request->validate([
         'password' => 'required|min:6',
         'NewPassword' => 'required|min:6|confirmed',
     ]);
 
-    // Check if the old password matches the stored hashed password
+    
     if (Hash::check($request->password, auth()->user()->password)) {
-        // Update the password with the new hashed value
+        
         auth()->user()->update(['password' => Hash::make($request['NewPassword'])]);
         return response()->json([
             'message' => 'The password has been updated.',
@@ -238,6 +238,12 @@ class AuthenticationController extends Controller
         return response([
             'user' => $user,
             'token' => $token
+        ]);
+    }
+
+    public function userInfo(){
+        return response()->json([
+            'userInfo'=>Auth::user(),
         ]);
     }
 
