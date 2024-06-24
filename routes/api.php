@@ -91,6 +91,8 @@ Route::get('/getPhoneNumbers', [AttributeController::class, 'getPhoneNumbers']);
 Route::post('/createEssentialOrder', [OrdersController::class, 'createEssentialOrder'])->middleware('auth:api');
 Route::get('/orderDetails/{order_id}', [OrdersController::class, 'orderDetails']);
 Route::delete('/deleteOrder/{order_id}', [OrdersController::class, 'deleteOrder']);
+Route::post('/updateEssentialOrder/{order_id}', [OrdersController::class, 'updateEssentialOrder']);
+Route::post('/updateExtraOrder/{order_id}', [OrdersController::class, 'updateExtraOrder']);
 
 Route::post('/createExtraOrder', [OrdersController::class, 'createExtraOrder'])->middleware('auth:api');
 
@@ -113,3 +115,4 @@ Route::get('/getReviewsUseer', [RateAndReviewController::class, 'getReviewsUseer
 Route::get('/getReviewsAdmin', [RateAndReviewController::class, 'getReviewsAdmin']);
 
 Route::post('/displayRateOrNot/{rateAndReview_id}', [RateAndReviewController::class, 'displayRateOrNot']);
+Route::get('/reportUserOrders', [OrdersController::class, 'reportUserOrders'])->middleware('auth:api');

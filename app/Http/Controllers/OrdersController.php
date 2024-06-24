@@ -21,17 +21,17 @@ class OrdersController extends Controller
             'type' => 'sometimes|in:urgent,regular,stored',
             'storingTime' => 'required_if:type,stored|integer'
         ]);
-        
+
         if (!$request->has('type')) {
             $request->merge(['type' => 'regular']);
         }
-        
+
         $order = Order::create([
             'user_id' => Auth::user()->id,
-            'type'=>$request->type,
+            'type' => $request->type,
         ]);
-        $totalPrice=0;
-        $AllQuantity=0;
+        $totalPrice = 0;
+        $AllQuantity = 0;
         foreach ($request->products as $product) {
             Cart::create([
                 'order_id' => $order->id,
@@ -40,33 +40,33 @@ class OrdersController extends Controller
             ]);
             $productPrice = Product::find($product['product_id'])->price;
             $totalPrice += $productPrice * $product['quantity'];
-            $AllQuantity+=$product['quantity'];
+            $AllQuantity += $product['quantity'];
         }
-        $AllPrice=0;
-        if($request->type=="stored"){
+        $AllPrice = 0;
+        if ($request->type == "stored") {
 
             $configPath = config_path('staticPrice.json');
             $config = json_decode(File::get($configPath), true);
-            $storePrice= $config['storePrice'];
-            $AllPrice= $storePrice * $request->storingTime * $AllQuantity;
+            $storePrice = $config['storePrice'];
+            $AllPrice = $storePrice * $request->storingTime * $AllQuantity;
             StoredOrder::create([
-                'order_id'=>$order->id,
-                'storingTime'=>$request->storingTime,
+                'order_id' => $order->id,
+                'storingTime' => $request->storingTime,
             ]);
         }
-        if($request->type=="urgent"){
+        if ($request->type == "urgent") {
 
             $configPath = config_path('staticPrice.json');
             $config = json_decode(File::get($configPath), true);
-            $urgentPrice= $config['urgentPrice'];
-            $AllPrice= $urgentPrice * $AllQuantity;
+            $urgentPrice = $config['urgentPrice'];
+            $AllPrice = $urgentPrice * $AllQuantity;
         }
-        
-        $order->totalPrice = $totalPrice +$AllPrice;
+
+        $order->totalPrice = $totalPrice + $AllPrice;
         $order->save();
 
         return response()->json([
-            'theOrder'=>$order,
+            'theOrder' => $order,
         ]);
     }
 
@@ -75,12 +75,12 @@ class OrdersController extends Controller
         $request->validate([
             'products.*' => 'required|array',
         ]);
-       
+
         $order = Order::create([
             'user_id' => Auth::user()->id,
         ]);
-        $totalPrice=0;
-        
+        $totalPrice = 0;
+
         foreach ($request->products as $product) {
             Cart::create([
                 'order_id' => $order->id,
@@ -90,11 +90,11 @@ class OrdersController extends Controller
             $productPrice = Product::find($product['product_id'])->price;
             $totalPrice += $productPrice * $product['quantity'];
         }
-        $order->totalPrice = $totalPrice ;
+        $order->totalPrice = $totalPrice;
         $order->save();
 
         return response()->json([
-            'theOrder'=>$order,
+            'theOrder' => $order,
         ]);
     }
 
@@ -118,6 +118,109 @@ class OrdersController extends Controller
         return response()->json([
             'message' => 'The order was deleted successfully',
         ], 200);
+    }
+    public function updateEssentialOrder(Request $request, $orderId)
+    {
+        $order = Order::find($orderId);
+
+        if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
+            return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
+        }
+
+        $request->validate([
+            'products.*' => 'required|array',
+            'type' => 'sometimes|in:urgent,regular,stored',
+            'storingTime' => 'required_if:type,stored|integer'
+        ]);
+
+        if (!$request->has('type')) {
+            $request->merge(['type' => 'regular']);
+        }
+
+        $order->type = $request->type;
+        $order->save();
+
+        $totalPrice = 0;
+        $AllQuantity = 0;
+
+        
+        Cart::where('order_id', $order->id)->delete();
+
+        foreach ($request->products as $product) {
+            Cart::create([
+                'order_id' => $order->id,
+                'product_id' => $product['product_id'],
+                'quantity' => $product['quantity'],
+            ]);
+            $productPrice = Product::find($product['product_id'])->price;
+            $totalPrice += $productPrice * $product['quantity'];
+            $AllQuantity += $product['quantity'];
+        }
+
+        $AllPrice = 0;
+
+        if ($request->type == "stored") {
+            $configPath = config_path('staticPrice.json');
+            $config = json_decode(File::get($configPath), true);
+            $storePrice = $config['storePrice'];
+            $AllPrice = $storePrice * $request->storingTime * $AllQuantity;
+
+            StoredOrder::updateOrCreate(
+                ['order_id' => $order->id],
+                ['storingTime' => $request->storingTime]
+            );
+        } else {
+            StoredOrder::where('order_id', $order->id)->delete();
+        }
+
+        if ($request->type == "urgent") {
+            $configPath = config_path('staticPrice.json');
+            $config = json_decode(File::get($configPath), true);
+            $urgentPrice = $config['urgentPrice'];
+            $AllPrice = $urgentPrice * $AllQuantity;
+        }
+
+        $order->totalPrice = $totalPrice + $AllPrice;
+        $order->save();
+
+        return response()->json([
+            'theOrder' => $order,
+        ]);
+    }
+
+    public function updateExtraOrder(Request $request, $orderId)
+    {
+        $order = Order::find($orderId);
+
+        if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
+            return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
+        }
+
+        $request->validate([
+            'products.*' => 'required|array',
+        ]);
+
+        $totalPrice = 0;
+
+        
+        Cart::where('order_id', $order->id)->delete();
+
+        foreach ($request->products as $product) {
+            Cart::create([
+                'order_id' => $order->id,
+                'product_id' => $product['product_id'],
+                'quantity' => $product['quantity'],
+            ]);
+            $productPrice = Product::find($product['product_id'])->price;
+            $totalPrice += $productPrice * $product['quantity'];
+        }
+
+        $order->totalPrice = $totalPrice;
+        $order->save();
+
+        return response()->json([
+            'theOrder' => $order,
+        ]);
     }
 
     public function ordresOfuser()
@@ -149,7 +252,7 @@ class OrdersController extends Controller
 
         if ($order) {
             $order->update(['state' => 'sent']);
-            
+
             return response([
                 'message' => 'the order accepted',
                 'state' => 'has_been_sent'
@@ -179,7 +282,100 @@ class OrdersController extends Controller
         }
     }
 
+    public function reportUserOrders(Request $request)
+{
+    $request->validate([
+        'date' => 'required_without_all:start_date,end_date|date',
+        'start_date' => 'required_with:end_date|date',
+        'end_date' => 'required_with:start_date|date|after_or_equal:start_date',
+    ]);
 
+    $userId = Auth::user()->id;
+
+    if ($request->has('date')) {
+        $orders = Order::where('user_id', $userId)
+                       ->whereDate('created_at', $request->date)
+                       ->get();
+    } else {
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+        $orders = Order::where('user_id', $userId)
+                       ->whereBetween('created_at', [$startDate, $endDate])
+                       ->get();
+    }
+
+    if ($orders->isEmpty()) {
+        return response()->json(['message' => 'No orders found in the specified date range.']);
+    }
+
+    $report = $orders->map(function ($order) {
+        $items = Cart::where('order_id', $order->id)->get()->map(function ($item) {
+            $product = Product::find($item->product_id);
+            return [
+                'product_id' => $item->product_id,
+                'product_name' => $product->name,
+                'quantity' => $item->quantity,
+                'price' => $product->price,
+                'total' => $product->price * $item->quantity,
+            ];
+        });
+
+        return [
+            'order_id' => $order->id,
+            'user_id' => $order->user_id,
+            'type' => $order->type,
+            'totalPrice' => $order->totalPrice,
+            'created_at' => $order->created_at,
+            'items' => $items,
+        ];
+    });
+
+    return response()->json([
+        'report' => $report
+    ]);
+}
+    public function reportAdminOrdersBetweenDates(Request $request)
+{
+    $request->validate([
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after_or_equal:start_date',
+    ]);
+
+    $startDate = $request->start_date;
+    $endDate = $request->end_date;
+
+    $orders = Order::whereBetween('created_at', [$startDate, $endDate])->get();
+
+    if ($orders->isEmpty()) {
+        return response()->json(['message' => 'No orders found in the specified date range.']);
+    }
+
+    $report = $orders->map(function ($order) {
+        $items = Cart::where('order_id', $order->id)->get()->map(function ($item) {
+            $product = Product::find($item->product_id);
+            return [
+                'product_id' => $item->product_id,
+                'product_name' => $product->name,
+                'quantity' => $item->quantity,
+                'price' => $product->price,
+                'total' => $product->price * $item->quantity,
+            ];
+        });
+
+        return [
+            'order_id' => $order->id,
+            'user_id' => $order->user_id,
+            'type' => $order->type,
+            'totalPrice' => $order->totalPrice,
+            'created_at' => $order->created_at,
+            'items' => $items,
+        ];
+    });
+
+    return response()->json([
+        'report' => $report
+    ]);
+}
 
     // public function report(Request $request)
     //     {
