@@ -143,7 +143,7 @@ class OrdersController extends Controller
         $totalPrice = 0;
         $AllQuantity = 0;
 
-        
+
         Cart::where('order_id', $order->id)->delete();
 
         foreach ($request->products as $product) {
@@ -202,7 +202,7 @@ class OrdersController extends Controller
 
         $totalPrice = 0;
 
-        
+
         Cart::where('order_id', $order->id)->delete();
 
         foreach ($request->products as $product) {
@@ -283,68 +283,74 @@ class OrdersController extends Controller
     }
 
     public function reportUserOrders(Request $request)
-{
-    $request->validate([
-        'date' => 'required_without_all:start_date,end_date|date',
-        'start_date' => 'required_with:end_date|date',
-        'end_date' => 'required_with:start_date|date|after_or_equal:start_date',
-    ]);
-
-    $userId = Auth::user()->id;
-
-    if ($request->has('date')) {
-        $orders = Order::where('user_id', $userId)
-                       ->whereDate('created_at', $request->date)
-                       ->get();
-    } else {
-        $startDate = $request->start_date;
-        $endDate = $request->end_date;
-        $orders = Order::where('user_id', $userId)
-                       ->whereBetween('created_at', [$startDate, $endDate])
-                       ->get();
-    }
-
-    if ($orders->isEmpty()) {
-        return response()->json(['message' => 'No orders found in the specified date range.']);
-    }
-
-    $report = $orders->map(function ($order) {
-        $items = Cart::where('order_id', $order->id)->get()->map(function ($item) {
-            $product = Product::find($item->product_id);
+    {
+        $request->validate([
+            'date' => 'required_without_all:start_date,end_date|date|date_format:Y-m-d',
+            'start_date' => 'required_with:end_date|date|date_format:Y-m-d',
+            'end_date' => 'required_with:start_date|date|date_format:Y-m-d|after_or_equal:start_date',
+        ]);
+    
+        $userId = Auth::user()->id;
+    
+        if ($request->has('date')) {
+            $orders = Order::where('user_id', $userId)
+                ->whereDate('created_at', $request->date)
+                ->get();
+        } else {
+            $startDate = $request->start_date;
+            $endDate = $request->end_date;
+            $orders = Order::where('user_id', $userId)
+                ->whereBetween('created_at', [
+                    $startDate . ' 00:00:00',
+                    $endDate . ' 23:59:59'
+                ])
+                ->get();
+        }
+    
+        if ($orders->isEmpty()) {
+            return response()->json(['message' => 'No orders found for the specified date or date range.']);
+        }
+    
+        $report = $orders->map(function ($order) {
+            $items = Cart::where('order_id', $order->id)->get()->map(function ($item) {
+                $product = Product::find($item->product_id);
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $product->name,
+                    'quantity' => $item->quantity,
+                    'price' => $product->price,
+                    'total' => $product->price * $item->quantity,
+                ];
+            });
+    
             return [
-                'product_id' => $item->product_id,
-                'product_name' => $product->name,
-                'quantity' => $item->quantity,
-                'price' => $product->price,
-                'total' => $product->price * $item->quantity,
+                'order_id' => $order->id,
+                'user_id' => $order->user_id,
+                'type' => $order->type,
+                'totalPrice' => $order->totalPrice,
+                'created_at' => $order->created_at->format('Y-m-d H:i:s'),
+                'items' => $items,
             ];
         });
-
-        return [
-            'order_id' => $order->id,
-            'user_id' => $order->user_id,
-            'type' => $order->type,
-            'totalPrice' => $order->totalPrice,
-            'created_at' => $order->created_at,
-            'items' => $items,
-        ];
-    });
-
-    return response()->json([
-        'report' => $report
-    ]);
-}
+    
+        return response()->json([
+            'report' => $report
+        ]);
+    }
     public function reportAdminOrdersBetweenDates(Request $request)
 {
     $request->validate([
-        'start_date' => 'required|date',
-        'end_date' => 'required|date|after_or_equal:start_date',
+        'start_date' => 'required|date|date_format:Y-m-d',
+        'end_date' => 'required|date|date_format:Y-m-d|after_or_equal:start_date',
     ]);
 
     $startDate = $request->start_date;
     $endDate = $request->end_date;
 
-    $orders = Order::whereBetween('created_at', [$startDate, $endDate])->get();
+    $orders = Order::whereBetween('created_at', [
+        $startDate . ' 00:00:00',
+        $endDate . ' 23:59:59'
+    ])->get();
 
     if ($orders->isEmpty()) {
         return response()->json(['message' => 'No orders found in the specified date range.']);
@@ -355,7 +361,6 @@ class OrdersController extends Controller
             $product = Product::find($item->product_id);
             return [
                 'product_id' => $item->product_id,
-                'product_name' => $product->name,
                 'quantity' => $item->quantity,
                 'price' => $product->price,
                 'total' => $product->price * $item->quantity,
@@ -367,7 +372,7 @@ class OrdersController extends Controller
             'user_id' => $order->user_id,
             'type' => $order->type,
             'totalPrice' => $order->totalPrice,
-            'created_at' => $order->created_at,
+            'created_at' => $order->created_at->format('Y-m-d H:i:s'),
             'items' => $items,
         ];
     });
@@ -376,42 +381,16 @@ class OrdersController extends Controller
         'report' => $report
     ]);
 }
+public function orderByState(Request $request)
+    {
+        $request->validate([
+           'state'=>'required|in:pending,preparing,sent,received', 
+        ]);
+        $state = $request->input('state'); 
+        $orders = Order::where('state', $state)
+            ->orderBy('state') 
+            ->get();
 
-    // public function report(Request $request)
-    //     {
-    //         $attrs=$request->validate([
-    //             'first_date'=>'required|date',
-    //             'second_date'=>'required|date',
-    //         ]);
-    //         if($attrs['first_date'] > $attrs['second_date'])
-    //         return response(['message'=>'the first date is greater than the second date']);
-    //         $it=auth()->user()->id;
-    //         $orders=Order::with('users')
-    //         ->whereHas('carts.depotmedicines', function ($query) use ($it) {
-    //             $query->where('depot_id',$it);
-    //         })
-    //         ->whereDate('created_at', '>=',$attrs['first_date'])
-    //         ->whereDate('created_at', '<=',$attrs['second_date'])
-    //         ->get();
-
-    //         $carts=Depot::with('medicines')
-    //         ->whereDate('created_at', '>=',$attrs['first_date'])
-    //         ->whereDate('created_at', '<=',$attrs['second_date'])
-    //         ->get();
-
-    //         $medicines=Depot::where('depot_id',$it)
-    //         ->whereDate('date_of_end', '>=',$attrs['first_date'])
-    //         ->whereDate('date_of_end', '<=',$attrs['second_date'])
-    //         ->get();
-
-    //         return response([
-    //             'message_1'=>'orders during this period',
-    //             'orders'=>$orders,
-    //             'message_2'=>'mmmm',
-    //             'carts'=>$carts,
-    //             'message_3'=>'expired medications during this period',
-    //             'medicines'=>$medicines
-
-    //         ]);
-    //     }
+        return response()->json(['orders' => $orders]);
+    }
 }
