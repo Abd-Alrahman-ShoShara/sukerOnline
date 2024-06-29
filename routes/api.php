@@ -117,4 +117,5 @@ Route::get('/getReviewsAdmin', [RateAndReviewController::class, 'getReviewsAdmin
 Route::post('/displayRateOrNot/{rateAndReview_id}', [RateAndReviewController::class, 'displayRateOrNot']);
 Route::post('/reportUserOrders', [OrdersController::class, 'reportUserOrders'])->middleware('auth:api');
 Route::post('/reportAdminOrdersBetweenDates', [OrdersController::class, 'reportAdminOrdersBetweenDates']);
-Route::post('/orderByState', [OrdersController::class, 'orderByState']);
+Route::post('/orderByState/{user_id}', [OrdersController::class, 'orderByState']);
+Route::post('/orderByStateForAdmin', [OrdersController::class, 'orderByStateForAdmin']);

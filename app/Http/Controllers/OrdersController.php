@@ -381,16 +381,45 @@ class OrdersController extends Controller
         'report' => $report
     ]);
 }
-public function orderByState(Request $request)
-    {
-        $request->validate([
-           'state'=>'required|in:pending,preparing,sent,received', 
-        ]);
-        $state = $request->input('state'); 
-        $orders = Order::where('state', $state)
-            ->orderBy('state') 
-            ->get();
+public function orderByState(Request $request, $user_id)
+{
+    $request->validate([
+        'state' => 'required|in:pending,preparing,sent,received',
+    ]);
 
-        return response()->json(['orders' => $orders]);
+    $orders = Order::where('user_id', $user_id)
+        ->orderBy('state', $request->state == 'pending' ? 'ASC' : 'DESC')
+        ->get();
+
+    $sortedOrders = [];
+    foreach ($orders as $order) {
+        if ($order->state == $request->state) {
+            array_unshift($sortedOrders, $order);
+        } else {
+            $sortedOrders[] = $order;
+        }
     }
+
+    return response()->json(['orders' => $sortedOrders]);
+}
+public function orderByStateForAdmin(Request $request)
+{
+    $request->validate([
+        'state' => 'required|in:pending,preparing,sent,received',
+    ]);
+
+    $orders = Order::orderBy('state', $request->state == 'pending' ? 'ASC' : 'DESC')
+        ->get();
+
+    $sortedOrders = [];
+    foreach ($orders as $order) {
+        if ($order->state == $request->state) {
+            array_unshift($sortedOrders, $order);
+        } else {
+            $sortedOrders[] = $order;
+        }
+    }
+
+    return response()->json(['orders' => $sortedOrders]);
+}
 }
