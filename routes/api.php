@@ -4,6 +4,7 @@ use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ClassificationController;
 use App\Http\Controllers\ComplaintsAndSuggestionController;
+use App\Http\Controllers\MaintenanceModeController;
 use App\Http\Controllers\OrdersController;
 use App\Http\Controllers\PointsProductController;
 use App\Http\Controllers\ProductController;
@@ -119,3 +120,11 @@ Route::post('/reportUserOrders', [OrdersController::class, 'reportUserOrders'])-
 Route::post('/reportAdminOrdersBetweenDates', [OrdersController::class, 'reportAdminOrdersBetweenDates']);
 Route::post('/orderByState/{user_id}', [OrdersController::class, 'orderByState']);
 Route::post('/orderByStateForAdmin', [OrdersController::class, 'orderByStateForAdmin']);
+
+
+/////////////////////////////////////////////////////////////////////maintenance
+Route::post('/admin/maintenance-mode', [MaintenanceModeController::class, 'setMaintenanceMode']);
+Route::get('/admin/maintenance-mode', [MaintenanceModeController::class, 'getMaintenanceMode']);
+
+
+Route::middleware(['auth', 'check.maintenance'])->resource('orders', OrdersController::class);
