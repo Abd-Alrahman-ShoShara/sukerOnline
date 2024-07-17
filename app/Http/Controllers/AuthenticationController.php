@@ -188,58 +188,64 @@ class AuthenticationController extends Controller
         // return $this->success(null, 'we send the code');
     }
     /////////////////////////////////////
-    public function loginForAdmin(Request $request)
-    {
-        $attrs = $request->validate([
-            'phone' => 'required',
-            'password' => 'required'
-        ]);
-        if (!Auth::attempt($attrs)) {
-            return response([
-                'message' => 'the phone or password is wronge'
-            ], 403);
-        }
-        if (Auth::user()->role == '0') {
-            return response([
-                'message' => 'no accses'
-            ], 403);
-        }
-        $user = User::where('phone', $request->phone)->first();
-        $token = $user->createToken('auth_token')->accessToken;
-        return response([
-            'user' => $user,
-            'token' => $token
-        ]);
-    }
+
     /////////////////////////////////////////
-    public function loginForUser(Request $request)
+    public function login(Request $request)
     {
         $request->validate([
             'phone' => 'required',
             'password' => 'required'
         ]);
-       
+    
         $user = User::where('phone', $request->phone)->first();
-
-        if ($user->role == '0') {
-            return response([
-                'message' => 'no accses'
-            ], 403);
-        }
-
+    
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response([
                 'message' => 'The provided credentials are incorrect'
             ], 403);
         }
-
+    
+        if ($user->role == '0') {
+            $user->type = 'admin';
+        } else {
+            $user->type = 'user';
+        }
+    
         $token = $user->createToken('auth_token')->accessToken;
-
+    
         return response([
             'user' => $user,
             'token' => $token
         ]);
     }
+    // public function loginForUser(Request $request)
+    // {
+    //     $request->validate([
+    //         'phone' => 'required',
+    //         'password' => 'required'
+    //     ]);
+       
+    //     $user = User::where('phone', $request->phone)->first();
+
+    //     if ($user->role == '0') {
+    //         return response([
+    //             'message' => 'no accses'
+    //         ], 403);
+    //     }
+
+    //     if (!$user || !Hash::check($request->password, $user->password)) {
+    //         return response([
+    //             'message' => 'The provided credentials are incorrect'
+    //         ], 403);
+    //     }
+
+    //     $token = $user->createToken('auth_token')->accessToken;
+
+    //     return response([
+    //         'user' => $user,
+    //         'token' => $token
+    //     ]);
+    // }
 
     public function userInfo(){
         return response()->json([
