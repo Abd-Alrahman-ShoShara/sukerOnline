@@ -69,6 +69,7 @@ class PointsProductController extends Controller
             'name' => 'required|unique:products,name,' . $PointsProduct->id,
             'price' => 'required|numeric',
             'description' => 'required',
+            'number' => 'required|integer',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
         ]);
 
@@ -99,6 +100,7 @@ class PointsProductController extends Controller
 
         $PointsProduct->update([
             'name' => $request->input('name'),
+            'number' => $request->input('number'),
             'price' => $request->input('price'),
             'description' => $request->input('description'),
             'images' => $imageUrls ? json_encode($imageUrls) : null,
@@ -130,61 +132,5 @@ class PointsProductController extends Controller
             'afterUpdate' => $PointsProduct->fresh(),
         ]);
     }
-
-    // public function createPointsOrder(Request $request)
-    // {
-    //     $request->validate([
-    //         'products.*' => 'required|array',
-    //         'type' => 'sometimes|in:urgent,regular,stored',
-    //     ]);
-
-    //     if (!$request->has('type')) {
-    //         $request->merge(['type' => 'regular']);
-    //     }
-
-    //     $order = Order::create([
-    //         'user_id' => Auth::user()->id,
-    //         'type' => $request->type,
-    //     ]);
-    //     $totalPrice = 0;
-    //     $AllQuantity = 0;
-    //     foreach ($request->products as $product) {
-    //         Cart::create([
-    //             'order_id' => $order->id,
-    //             'product_id' => $product['product_id'],
-    //             'quantity' => $product['quantity'],
-    //         ]);
-    //         $productPrice = Product::find($product['product_id'])->price;
-    //         $totalPrice += $productPrice * $product['quantity'];
-    //         $AllQuantity += $product['quantity'];
-    //     }
-    //     $AllPrice = 0;
-    //     if ($request->type == "stored") {
-
-    //         $configPath = config_path('staticPrice.json');
-    //         $config = json_decode(File::get($configPath), true);
-    //         $storePrice = $config['storePrice'];
-    //         $AllPrice = $storePrice * $request->storingTime * $AllQuantity;
-    //         StoredOrder::create([
-    //             'order_id' => $order->id,
-    //             'storingTime' => $request->storingTime,
-    //         ]);
-    //     }
-    //     if ($request->type == "urgent") {
-
-    //         $configPath = config_path('staticPrice.json');
-    //         $config = json_decode(File::get($configPath), true);
-    //         $urgentPrice = $config['urgentPrice'];
-    //         $AllPrice = $urgentPrice * $AllQuantity;
-    //     }
-
-    //     $order->totalPrice = $totalPrice + $AllPrice;
-    //     $order->save();
-
-    //     return response()->json([
-    //         'theOrder' => $order,
-    //     ]);
-    // }
-
 
 }

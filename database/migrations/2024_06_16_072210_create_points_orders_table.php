@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger("user_id");
             $table->foreign("user_id")->references('id')->on("users")->onDelete('cascade');
+            $table->unsignedBigInteger('pointsProduct_id');
+            $table->bigInteger('quantity')->default(0);
+            $table->foreign('pointsProduct_id')->references('id')->on('Points_products')->onDelete('cascade');
             $table->boolean('ReadOrNot')->default(false);
             $table->timestamps();
         });

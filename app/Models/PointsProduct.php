@@ -13,6 +13,7 @@ class PointsProduct extends Model
         'description',
         'price',
         'images',
+        'number',
         'points',
         'displayOrNot',
     ];
@@ -21,4 +22,7 @@ class PointsProduct extends Model
         'created_at',
         'updated_at',
     ];
+    public function pointsOrder(){
+        return $this->hasMany(PointsOrder::class);
+    }
 }

@@ -19,8 +19,7 @@ return new class extends Migration
             $table->string('images');
             $table->integer('number');
             $table->boolean('displayOrNot')->default(false);
-            $table->unsignedBigInteger('PointsOrders_id');
-            $table->foreign('PointsOrders_id')->references('id')->on('points_orders')->onDelete('cascade');
+        
             $table->timestamps();
         });
     }

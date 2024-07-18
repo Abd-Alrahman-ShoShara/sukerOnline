@@ -51,6 +51,9 @@ class User extends Authenticatable
     public function order(){
         return $this->hasMany(Order::class);
     }
+    public function pointsOrder(){
+        return $this->hasMany(PointsOrder::class);
+    }
 
     public function complaints(){
         return $this->hasMany(ComplaintsAndSuggestion::class);
