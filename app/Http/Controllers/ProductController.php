@@ -22,20 +22,19 @@ class ProductController extends Controller
             'classifications.*' => 'required_if:is_public,false|string',
             'type' => 'nullable|string',
             'points' => 'required|integer',
-            'images' => 'nullable|array',
-            'images.*' => 'image|mimes:png,jpg,jpeg,webp',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
+
         ]);
 
-        $images = [];
-
+        $imageUrls = [];
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $file) {
-                $extension = $file->getClientOriginalExtension();
-                $filename = uniqid() . '.' . $extension;
-                $path = 'uploads/Products/';
-                $file->move($path, $filename);
-                $images[] = $filename;
+            foreach ($request->file('images') as $key => $image) {
+                $imageName = time() . $key . '.' . $image->extension();
+                $image->move(public_path('uploads/'), $imageName);
+                $imageUrls[] = URL::asset('uploads/' . $imageName);
             }
+        } else {
+            $imageUrls = null;
         }
 
         $product = Product::create([
@@ -44,7 +43,7 @@ class ProductController extends Controller
             'type' => $request->type,
             'points' => $request->points,
             'description' => $request->input('description'),
-            'images' => json_encode($images),
+            'images' => $imageUrls ? json_encode($imageUrls) : null,
             'is_public' => $request->is_public,
         ]);
 
