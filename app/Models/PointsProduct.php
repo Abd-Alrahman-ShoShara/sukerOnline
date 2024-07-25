@@ -22,7 +22,5 @@ class PointsProduct extends Model
         'created_at',
         'updated_at',
     ];
-    public function pointsOrder(){
-        return $this->hasMany(PointsOrder::class);
-    }
+    
 }

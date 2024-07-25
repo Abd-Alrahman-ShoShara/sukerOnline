@@ -10,8 +10,9 @@ class PointsOrder extends Model
     use HasFactory;
     protected $fillable =[
         'user_id',
-        'pointsProduct_id',
-        'quantity'
+        'ReadOrNot',
+        'totalPrice',
+        'state',
     ];
 
     protected $hidden=[
@@ -21,8 +22,9 @@ class PointsOrder extends Model
     public function users(){
         return $this->belongsTo(User::class,'user_id');
     }
-    public function pointsProduct(){
-        return $this->belongsTo(PointsProduct::class);
+
+    public function pointCarts(){
+        return $this->hasMany(PointCart::class);
     }
 
 }
