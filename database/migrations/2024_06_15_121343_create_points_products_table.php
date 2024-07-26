@@ -17,7 +17,7 @@ return new class extends Migration
             $table->double('price');
             $table->string('description');
             $table->string('images');
-            $table->integer('number');
+            $table->integer('quantity')->default(0);
             $table->boolean('displayOrNot')->default(false);
         
             $table->timestamps();

@@ -12,6 +12,7 @@ class Order extends Model
         'user_id',
         'state',
         'type',
+        'points',
     ];
     protected $hidden=[
         'created_at',

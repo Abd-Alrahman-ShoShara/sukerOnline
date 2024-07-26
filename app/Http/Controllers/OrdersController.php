@@ -20,60 +20,71 @@ class OrdersController extends Controller
             'type' => 'sometimes|in:urgent,regular,stored',
             'storingTime' => 'required_if:type,stored|integer'
         ]);
-
+    
         if (!$request->has('type')) {
             $request->merge(['type' => 'regular']);
         }
-        $user=Auth::user();
+    
+        $user = Auth::user();
         $order = Order::create([
-            'user_id' => Auth::user()->id,
+            'user_id' => $user->id,
             'type' => $request->type,
         ]);
-        $PointsToAdd=0;
+    
+        $PointsToAdd = 0;
         $totalPrice = 0;
         $AllQuantity = 0;
+    
         foreach ($request->products as $product) {
             Cart::create([
                 'order_id' => $order->id,
                 'product_id' => $product['product_id'],
                 'quantity' => $product['quantity'],
             ]);
+    
             $theproduct = Product::find($product['product_id']);
             $productPrice = $theproduct->price;
             $totalPrice += $productPrice * $product['quantity'];
             $AllQuantity += $product['quantity'];
-            $PointsToAdd+=$theproduct->points * $product['quantity'];
+            $PointsToAdd += $theproduct->points * $product['quantity'];
         }
-        $user->userPoints=$PointsToAdd;
+    
+        $user->userPoints += $PointsToAdd;
         $user->save();
+    
         $AllPrice = 0;
+    
         if ($request->type == "stored") {
-
             $configPath = config_path('staticPrice.json');
             $config = json_decode(File::get($configPath), true);
             $storePrice = $config['storePrice'];
             $AllPrice = $storePrice * $request->storingTime * $AllQuantity;
+    
             StoredOrder::create([
                 'order_id' => $order->id,
                 'storingTime' => $request->storingTime,
             ]);
         }
+    
         if ($request->type == "urgent") {
-
             $configPath = config_path('staticPrice.json');
             $config = json_decode(File::get($configPath), true);
             $urgentPrice = $config['urgentPrice'];
             $AllPrice = $urgentPrice * $AllQuantity;
         }
-
+    
         $order->totalPrice = $totalPrice + $AllPrice;
-        $order->points = $PointsToAdd;
+        $order->points = $PointsToAdd; 
         $order->save();
-
+    
         return response()->json([
             'theOrder' => $order,
+            
         ]);
     }
+
+
+
 
     public function createExtraOrder(Request $request)
 {

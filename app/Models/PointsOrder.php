@@ -24,7 +24,7 @@ class PointsOrder extends Model
     }
 
     public function pointCarts(){
-        return $this->hasMany(PointsCart::class);
+        return $this->hasMany(PointsCart::class,'pointsOrders_id');
     }
 
 }

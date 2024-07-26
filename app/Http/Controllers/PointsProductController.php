@@ -14,7 +14,7 @@ class PointsProductController extends Controller
             'name' => 'required|unique:products',
             'price' => 'required|numeric',
             'description' => 'required|string',
-            'number' => 'required|integer',
+            'quantity' => 'required|integer',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
 
         ]);
@@ -34,7 +34,7 @@ class PointsProductController extends Controller
             'name' => $request->input('name'),
             'price' => $request->input('price'),
             'description' => $request->input('description'),
-            'number' => $request->input('number'),
+            'quantity' => $request->input('quantity'),
             'images' => $imageUrls ? json_encode($imageUrls) : null,
         ]);
 
@@ -69,7 +69,7 @@ class PointsProductController extends Controller
             'name' => 'required|unique:products,name,' . $PointsProduct->id,
             'price' => 'required|numeric',
             'description' => 'required',
-            'number' => 'required|integer',
+            'quantity' => 'required|integer',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
         ]);
 
@@ -100,7 +100,7 @@ class PointsProductController extends Controller
 
         $PointsProduct->update([
             'name' => $request->input('name'),
-            'number' => $request->input('number'),
+            'quantity' => $request->input('quantity'),
             'price' => $request->input('price'),
             'description' => $request->input('description'),
             'images' => $imageUrls ? json_encode($imageUrls) : null,

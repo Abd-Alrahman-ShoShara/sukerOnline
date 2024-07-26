@@ -28,7 +28,7 @@ class PointsOrderController extends Controller
             $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
             if ($product['quantity'] > $pointsProduct->quantity) {
                 return response()->json([
-                    'message' => 'The quantity of the product with ID ' . $pointsProduct->id . ' is not available.',
+                    'message' => ' The quantity of the product with ID ' . $pointsProduct->id . ' is not available.',
                 ], 400);
             }
             $productPrice = $pointsProduct->price;
@@ -39,13 +39,13 @@ class PointsOrderController extends Controller
             $pointsOrder = PointsOrder::create([
                 'user_id' => $user->id,
             ]);
-    
+            
             $user->userPoints -= $totalPrice;
             $user->save();
     
             foreach ($request->products as $product) {
                 PointsCart::create([
-                    'pointsOrder_id' => $pointsOrder->id,
+                    'pointsOrders_id' => $pointsOrder->id,
                     'pointsProduct_id' => $product['pointsProduct_id'],
                     'quantity' => $product['quantity'],
                 ]);
@@ -55,13 +55,15 @@ class PointsOrderController extends Controller
             }
     
             return response()->json([
-                'theOrder' => $pointsOrder,
+                'message'=>'created successfully',
+                'theOrder' => $pointsOrder->load('pointCarts'),
             ]);
         } else {
             return response()->json([
                 'message' => 'Your points do not have enough.',
             ], 400);
         }
+        
     }
     
     

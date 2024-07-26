@@ -24,6 +24,7 @@ class User extends Authenticatable
         'role',
         'classification_id',
         'nameOfStore',
+        'userPoints',
         'adress',
     ];
 

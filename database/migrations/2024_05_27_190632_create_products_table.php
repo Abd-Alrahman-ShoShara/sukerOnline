@@ -18,7 +18,7 @@ return new class extends Migration
             $table->enum('type',['essential','extra'])->default('essential');
             $table->string('description');
             $table->string('images');
-            $table->integer('Points');
+            $table->integer('points');
             $table->boolean('is_public')->default(false);
             $table->boolean('displayOrNot')->default(true);
             $table->timestamps();

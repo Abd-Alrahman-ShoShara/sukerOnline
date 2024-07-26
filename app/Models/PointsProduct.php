@@ -13,7 +13,7 @@ class PointsProduct extends Model
         'description',
         'price',
         'images',
-        'number',
+        'quantity',
         'points',
         'displayOrNot',
     ];
