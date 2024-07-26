@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PointsCart;
 use App\Models\PointsOrder;
 use App\Models\PointsProduct;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+
 use Illuminate\Support\Facades\Auth;
 
 class PointsOrderController extends Controller
@@ -12,273 +15,193 @@ class PointsOrderController extends Controller
     
   
     
-    //     public function createEssentialOrder(Request $request)
-    //     {
-    //         $request->validate([
-    //             'products.*' => 'required|array',
-    //             'type' => 'sometimes|in:urgent,regular,stored',
-    //             'storingTime' => 'required_if:type,stored|integer'
-    //         ]);
+    public function createPointsOrder(Request $request)
+    {
+        $request->validate([
+            'products.*' => 'required|array',
+        ]);
     
-    //         if (!$request->has('type')) {
-    //             $request->merge(['type' => 'regular']);
-    //         }
+        $user = Auth::user();
+        $totalPrice = 0;
     
-    //         $order = Order::create([
-    //             'user_id' => Auth::user()->id,
-    //             'type' => $request->type,
-    //         ]);
-    //         $totalPrice = 0;
-    //         $AllQuantity = 0;
-    //         foreach ($request->products as $product) {
-    //             Cart::create([
-    //                 'order_id' => $order->id,
-    //                 'product_id' => $product['product_id'],
-    //                 'quantity' => $product['quantity'],
-    //             ]);
-    //             $productPrice = Product::find($product['product_id'])->price;
-    //             $totalPrice += $productPrice * $product['quantity'];
-    //             $AllQuantity += $product['quantity'];
-    //         }
-    //         $AllPrice = 0;
-    //         if ($request->type == "stored") {
+        foreach ($request->products as $product) {
+            $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
+            if ($product['quantity'] > $pointsProduct->quantity) {
+                return response()->json([
+                    'message' => 'The quantity of the product with ID ' . $pointsProduct->id . ' is not available.',
+                ], 400);
+            }
+            $productPrice = $pointsProduct->price;
+            $totalPrice += $productPrice * $product['quantity'];
+        }
     
-    //             $configPath = config_path('staticPrice.json');
-    //             $config = json_decode(File::get($configPath), true);
-    //             $storePrice = $config['storePrice'];
-    //             $AllPrice = $storePrice * $request->storingTime * $AllQuantity;
-    //             StoredOrder::create([
-    //                 'order_id' => $order->id,
-    //                 'storingTime' => $request->storingTime,
-    //             ]);
-    //         }
-    //         if ($request->type == "urgent") {
+        if ($user->userPoints >= $totalPrice) {
+            $pointsOrder = PointsOrder::create([
+                'user_id' => $user->id,
+            ]);
     
-    //             $configPath = config_path('staticPrice.json');
-    //             $config = json_decode(File::get($configPath), true);
-    //             $urgentPrice = $config['urgentPrice'];
-    //             $AllPrice = $urgentPrice * $AllQuantity;
-    //         }
+            $user->userPoints -= $totalPrice;
+            $user->save();
     
-    //         $order->totalPrice = $totalPrice + $AllPrice;
-    //         $order->save();
+            foreach ($request->products as $product) {
+                PointsCart::create([
+                    'pointsOrder_id' => $pointsOrder->id,
+                    'pointsProduct_id' => $product['pointsProduct_id'],
+                    'quantity' => $product['quantity'],
+                ]);
     
-    //         return response()->json([
-    //             'theOrder' => $order,
-    //         ]);
-    //     }
+                $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
+                $pointsProduct->decrement('quantity', $product['quantity']);
+            }
     
-    //     public function createExtraOrder(Request $request)
-    //     {
-    //         $request->validate([
-    //             'products.*' => 'required|array',
-    //         ]);
-    
-    //         $order = Order::create([
-    //             'user_id' => Auth::user()->id,
-    //         ]);
-    //         $totalPrice = 0;
-    
-    //         foreach ($request->products as $product) {
-    //             Cart::create([
-    //                 'order_id' => $order->id,
-    //                 'product_id' => $product['product_id'],
-    //                 'quantity' => $product['quantity'],
-    //             ]);
-    //             $productPrice = Product::find($product['product_id'])->price;
-    //             $totalPrice += $productPrice * $product['quantity'];
-    //         }
-    //         $order->totalPrice = $totalPrice;
-    //         $order->save();
-    
-    //         return response()->json([
-    //             'theOrder' => $order,
-    //         ]);
-    //     }
-    
-    //     public function orderDetails($order_id)
-    //     {
-    //         return response([
-    //             'carts' => order::where('id', $order_id)->with('carts.product:id,name,price')->get(),
-    //         ], 200);
-    //     }
-    
-    //     public function deleteOrder($order_id)
-    //     {
-    //         $order = Order::where(['id' => $order_id, 'state' => 'pending'])->first();
-    
-    //         if (!$order) {
-    //             return response()->json([
-    //                 'message' => 'You cannot remove the order',
-    //             ], 200);
-    //         }
-    //         $order->delete();
-    //         return response()->json([
-    //             'message' => 'The order was deleted successfully',
-    //         ], 200);
-    //     }
-    //     public function updateEssentialOrder(Request $request, $orderId)
-    //     {
-    //         $order = Order::find($orderId);
-    
-    //         if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
-    //             return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
-    //         }
-    
-    //         $request->validate([
-    //             'products.*' => 'required|array',
-    //             'type' => 'sometimes|in:urgent,regular,stored',
-    //             'storingTime' => 'required_if:type,stored|integer'
-    //         ]);
-    
-    //         if (!$request->has('type')) {
-    //             $request->merge(['type' => 'regular']);
-    //         }
-    
-    //         $order->type = $request->type;
-    //         $order->save();
-    
-    //         $totalPrice = 0;
-    //         $AllQuantity = 0;
+            return response()->json([
+                'theOrder' => $pointsOrder,
+            ]);
+        } else {
+            return response()->json([
+                'message' => 'Your points do not have enough.',
+            ], 400);
+        }
+    }
     
     
-    //         Cart::where('order_id', $order->id)->delete();
+        public function pointsOrderDetails($pointsOrder_id)
+        {
+            return response([
+                'pointsCarts' => PointsOrder::where('id', $pointsOrder_id)->with('pointCarts.pointsProduct:id,name,price')->get(),
+            ], 200);
+        }
     
-    //         foreach ($request->products as $product) {
-    //             Cart::create([
-    //                 'order_id' => $order->id,
-    //                 'product_id' => $product['product_id'],
-    //                 'quantity' => $product['quantity'],
-    //             ]);
-    //             $productPrice = Product::find($product['product_id'])->price;
-    //             $totalPrice += $productPrice * $product['quantity'];
-    //             $AllQuantity += $product['quantity'];
-    //         }
+        public function deleteOrder($pointsOrder_id)
+        {
+            $pointsOrder = PointsOrder::where(['id' => $pointsOrder_id, 'state' => 'pending'])->first();
     
-    //         $AllPrice = 0;
+            if (!$pointsOrder) {
+                return response()->json([
+                    'message' => 'You cannot remove the order',
+                ], 200);
+            }
+            $pointsOrder->delete();
+            return response()->json([
+                'message' => 'The order was deleted successfully',
+            ], 200);
+        }
+
+        public function updatePointsOrder(Request $request, $pointsOrder_id)
+        {
+            $pointsOrder = PointsOrder::find($pointsOrder_id);
+        
+            if (!$pointsOrder || !in_array($pointsOrder->state, ['pending', 'preparing'])) {
+                return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
+            }
+        
+            $request->validate([
+                'products.*' => 'required|array',
+            ]);
+        
+            $user = $pointsOrder->user;
+            $totalPrice = 0;
+        
+            
+            PointsCart::where('pointsOrder_id', $pointsOrder->id)->delete();
+        
+            foreach ($request->products as $product) {
+                $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
+                if ($product['quantity'] > $pointsProduct->quantity) {
+                    return response()->json([
+                        'message' => 'The quantity of the product with ID ' . $pointsProduct->id . ' is not available.',
+                    ], 400);
+                }
+                $productPrice = $pointsProduct->price;
+                $totalPrice += $productPrice * $product['quantity'];
+            }
+        
+            $user->userPoints += $pointsOrder->totalPrice;
+            $user->save();
+        
+            $pointsOrder->totalPrice = $totalPrice;
+            $pointsOrder->save();
+        
+            foreach ($request->products as $product) {
+                PointsCart::create([
+                    'pointsOrder_id' => $pointsOrder->id,
+                    'pointsProduct_id' => $product['pointsProduct_id'],
+                    'quantity' => $product['quantity'],
+                ]);
+        
+                $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
+                $pointsProduct->decrement('quantity', $product['quantity']);
+            }
+        
+            $user->userPoints -= $totalPrice;
+            $user->save();
+        
+            return response()->json([
+                'theOrder' => $pointsOrder,
+            ]);
+        }
     
-    //         if ($request->type == "stored") {
-    //             $configPath = config_path('staticPrice.json');
-    //             $config = json_decode(File::get($configPath), true);
-    //             $storePrice = $config['storePrice'];
-    //             $AllPrice = $storePrice * $request->storingTime * $AllQuantity;
-    
-    //             StoredOrder::updateOrCreate(
-    //                 ['order_id' => $order->id],
-    //                 ['storingTime' => $request->storingTime]
-    //             );
-    //         } else {
-    //             StoredOrder::where('order_id', $order->id)->delete();
-    //         }
-    
-    //         if ($request->type == "urgent") {
-    //             $configPath = config_path('staticPrice.json');
-    //             $config = json_decode(File::get($configPath), true);
-    //             $urgentPrice = $config['urgentPrice'];
-    //             $AllPrice = $urgentPrice * $AllQuantity;
-    //         }
-    
-    //         $order->totalPrice = $totalPrice + $AllPrice;
-    //         $order->save();
-    
-    //         return response()->json([
-    //             'theOrder' => $order,
-    //         ]);
-    //     }
-    
-    //     public function updateExtraOrder(Request $request, $orderId)
-    //     {
-    //         $order = Order::find($orderId);
-    
-    //         if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
-    //             return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
-    //         }
-    
-    //         $request->validate([
-    //             'products.*' => 'required|array',
-    //         ]);
-    
-    //         $totalPrice = 0;
-    
-    
-    //         Cart::where('order_id', $order->id)->delete();
-    
-    //         foreach ($request->products as $product) {
-    //             Cart::create([
-    //                 'order_id' => $order->id,
-    //                 'product_id' => $product['product_id'],
-    //                 'quantity' => $product['quantity'],
-    //             ]);
-    //             $productPrice = Product::find($product['product_id'])->price;
-    //             $totalPrice += $productPrice * $product['quantity'];
-    //         }
-    
-    //         $order->totalPrice = $totalPrice;
-    //         $order->save();
-    
-    //         return response()->json([
-    //             'theOrder' => $order,
-    //         ]);
-    //     }
-    
-    //     public function ordresOfuser()
-    //     {
-    //         return response([
-    //             'orders' => Order::where('user_id', auth()->user()->id)->get()
-    //         ], 200);
-    //     }
-    
-    //     public function preparingOrder($order_id)
-    //     {
-    //         $order = Order::where(['id' => $order_id, 'state' => 'pending'])->first();
-    
-    //         if ($order) {
-    //             $order->update(['state' => 'preparing']);
-    //             return response()->json([
-    //                 'message' => 'order state is updating successfully'
-    //             ], 403);
-    //         } else {
-    //             return response()->json([
-    //                 'message' => 'it is not possible to edit due to preparing'
-    //             ], 403);
-    //         }
-    //     }
-    
-    //     public function sentOrder($order_id)
-    //     {
-    //         $order = Order::where([['id', $order_id], ['state', 'preparing']])->first();
-    
-    //         if ($order) {
-    //             $order->update(['state' => 'sent']);
-    
-    //             return response([
-    //                 'message' => 'the order accepted',
-    //                 'state' => 'has_been_sent'
-    //             ], 200);
-    //         } else {
-    //             return response()->json([
-    //                 'message' => 'it is not possible to edit due to has_been_sent'
-    //             ], 403);
-    //         }
-    //     }
-    
-    //     public function receivedOrder($order_id)
-    //     {
-    //         $order = Order::where(['id' => $order_id, 'state' => 'sent'])->first();
-    
-    //         if ($order) {
-    //             $order->update(['state' => 'received']);
-    
-    //             return response([
-    //                 'message' => 'the order accepted',
-    //                 'state' => 'received'
-    //             ], 200);
-    //         } else {
-    //             return response()->json([
-    //                 'message' => 'it is not possible to edit due to received'
-    //             ], 403);
-    //         }
-    //     }
+        public function ordersOfUser()
+{
+    $user = auth()->user();
+    $pointsOrder = PointsOrder::where('user_id', $user->id)->get();
+
+    return response()->json([
+        'pointsOrder' => $pointsOrder
+    ], 200);
+}
+
+public function preparingOrder($pointsOrder_id)
+{
+    $pointsOrder = PointsOrder::where(['id' => $pointsOrder_id, 'state' => 'pending'])->first();
+
+    if ($pointsOrder) {
+        $pointsOrder->update(['state' => 'preparing']);
+        return response()->json([
+            'message' => 'Order state updated successfully'
+        ], 200);
+    } else {
+        return response()->json([
+            'message' => 'Unable to update the order due to its current state'
+        ], 403);
+    }
+}
+
+public function sentOrder($pointsOrder_id)
+{
+    $pointsOrder = PointsOrder::where([['id', $pointsOrder_id], ['state', 'preparing']])->first();
+
+    if ($pointsOrder) {
+        $pointsOrder->update(['state' => 'sent']);
+
+        return response()->json([
+            'message' => 'Order has been sent',
+            'state' => 'sent'
+        ], 200);
+    } else {
+        return response()->json([
+            'message' => 'Unable to update the order due to its current state'
+        ], 403);
+    }
+}
+
+public function receivedOrder($pointsOrder_id)
+{
+    $pointsOrder = PointsOrder::where(['id' => $pointsOrder_id, 'state' => 'sent'])->first();
+
+    if ($pointsOrder) {
+        $pointsOrder->update(['state' => 'received']);
+
+        return response()->json([
+            'message' => 'Order has been received',
+            'state' => 'received'
+        ], 200);
+    } else {
+        return response()->json([
+            'message' => 'Unable to update the order due to its current state'
+        ], 403);
+    }
+}
     
     //     public function reportUserOrders(Request $request)
     //     {
