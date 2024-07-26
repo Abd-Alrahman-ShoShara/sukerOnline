@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PointsCart;
 use App\Models\PointsOrder;
 use App\Models\PointsProduct;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
@@ -67,12 +68,22 @@ class PointsOrderController extends Controller
     }
     
     
-        public function pointsOrderDetails($pointsOrder_id)
-        {
-            return response([
-                'pointsCarts' => PointsOrder::where('id', $pointsOrder_id)->with('pointCarts.pointsProduct:id,name,price')->get(),
-            ], 200);
+    public function pointsOrderDetails($pointsOrder_id)
+    {
+        $pointsOrder = PointsOrder::with('pointCarts.pointsProduct:id,name,price')
+            ->whereId($pointsOrder_id)
+            ->first();
+    
+        if (!$pointsOrder) {
+            return response()->json([
+                'message' => 'There is no order to show',
+            ], 404);
         }
+    
+        return response()->json([
+            'pointsOrder' => $pointsOrder
+        ], 200);
+    }
     
         public function deletePointsOrder($pointsOrder_id)
         {
@@ -101,11 +112,14 @@ class PointsOrderController extends Controller
                 'products.*' => 'required|array',
             ]);
         
-            $user = $pointsOrder->user;
+            $user = User::find($pointsOrder->user_id);
+            if (!$user) {
+            return response()->json(['error' => 'User not found for this order.'], 404);
+            }
             $totalPrice = 0;
         
             
-            PointsCart::where('pointsOrder_id', $pointsOrder->id)->delete();
+            PointsCart::where('pointsOrders_id', $pointsOrder_id)->delete();
         
             foreach ($request->products as $product) {
                 $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
@@ -126,7 +140,7 @@ class PointsOrderController extends Controller
         
             foreach ($request->products as $product) {
                 PointsCart::create([
-                    'pointsOrder_id' => $pointsOrder->id,
+                    'pointsOrders_id' => $pointsOrder_id,
                     'pointsProduct_id' => $product['pointsProduct_id'],
                     'quantity' => $product['quantity'],
                 ]);
