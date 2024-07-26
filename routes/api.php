@@ -89,9 +89,9 @@ Route::get('/getPhoneNumbers', [AttributeController::class, 'getPhoneNumbers']);
 
 Route::post('/createEssentialOrder', [OrdersController::class, 'createEssentialOrder'])->middleware('auth:api');
 Route::get('/orderDetails/{order_id}', [OrdersController::class, 'orderDetails']);
-Route::delete('/deleteOrder/{order_id}', [OrdersController::class, 'deleteOrder'])->middleware('auth:api');
-Route::post('/updateEssentialOrder/{order_id}', [OrdersController::class, 'updateEssentialOrder'])->middleware('auth:api');
-Route::post('/updateExtraOrder/{order_id}', [OrdersController::class, 'updateExtraOrder'])->middleware('auth:api');
+Route::delete('/deleteOrder/{order_id}', [OrdersController::class, 'deleteOrder']);
+Route::post('/updateEssentialOrder/{order_id}', [OrdersController::class, 'updateEssentialOrder']);
+Route::post('/updateExtraOrder/{order_id}', [OrdersController::class, 'updateExtraOrder']);
 
 Route::post('/createExtraOrder', [OrdersController::class, 'createExtraOrder'])->middleware('auth:api');
 

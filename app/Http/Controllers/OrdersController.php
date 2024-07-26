@@ -143,9 +143,16 @@ public function deleteOrder($order_id)
             'message' => 'You cannot remove the order',
         ], 403);
     }
+    $user = User::find($order->user_id);
+    if (!$user) {
+        return response()->json(['error' => 'User not found for this order.'], 404);
+    }
 
     // Deduct points from the user
-    $user = auth()->user();
+    $user = User::find($order->user_id);
+    if (!$user) {
+        return response()->json(['error' => 'User not found for this order.'], 404);
+    }
     $user->userPoints -= $order->points;
     $user->save();
 
@@ -198,7 +205,10 @@ public function updateEssentialOrder(Request $request, $orderId)
     }
 
     // Adjust user points
-    $user = auth()->user();
+    $user = User::find($order->user_id);
+    if (!$user) {
+        return response()->json(['error' => 'User not found for this order.'], 404);
+    }
     $user->userPoints -= $order->points;  // Remove old points
     $user->userPoints += $PointsToAdd;    // Add new points
     $user->save();
@@ -267,7 +277,10 @@ public function updateExtraOrder(Request $request, $orderId)
     }
 
     // Adjust user points
-    $user = auth()->user();
+    $user = User::find($order->user_id);
+    if (!$user) {
+        return response()->json(['error' => 'User not found for this order.'], 404);
+    }
     $user->userPoints -= $order->points;  // Remove old points
     $user->userPoints += $PointsToAdd;    // Add new points
     $user->save();
