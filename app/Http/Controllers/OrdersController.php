@@ -24,11 +24,12 @@ class OrdersController extends Controller
         if (!$request->has('type')) {
             $request->merge(['type' => 'regular']);
         }
-
+        $user=Auth::user();
         $order = Order::create([
             'user_id' => Auth::user()->id,
             'type' => $request->type,
         ]);
+        $PointsToAdd=0;
         $totalPrice = 0;
         $AllQuantity = 0;
         foreach ($request->products as $product) {
@@ -37,10 +38,14 @@ class OrdersController extends Controller
                 'product_id' => $product['product_id'],
                 'quantity' => $product['quantity'],
             ]);
-            $productPrice = Product::find($product['product_id'])->price;
+            $theproduct = Product::find($product['product_id']);
+            $productPrice = $theproduct->price;
             $totalPrice += $productPrice * $product['quantity'];
             $AllQuantity += $product['quantity'];
+            $PointsToAdd+=$theproduct->points * $product['quantity'];
         }
+        $user->userPoints=$PointsToAdd;
+        $user->save();
         $AllPrice = 0;
         if ($request->type == "stored") {
 
@@ -62,6 +67,7 @@ class OrdersController extends Controller
         }
 
         $order->totalPrice = $totalPrice + $AllPrice;
+        $order->points = $PointsToAdd;
         $order->save();
 
         return response()->json([
@@ -70,157 +76,200 @@ class OrdersController extends Controller
     }
 
     public function createExtraOrder(Request $request)
-    {
-        $request->validate([
-            'products.*' => 'required|array',
+{
+    $request->validate([
+        'products.*' => 'required|array',
+    ]);
+
+    $user = auth()->user();
+    $order = Order::create([
+        'user_id' => $user->id,
+    ]);
+
+    $totalPrice = 0;
+    $PointsToAdd = 0;
+
+    foreach ($request->products as $product) {
+        Cart::create([
+            'order_id' => $order->id,
+            'product_id' => $product['product_id'],
+            'quantity' => $product['quantity'],
         ]);
 
-        $order = Order::create([
-            'user_id' => Auth::user()->id,
-        ]);
-        $totalPrice = 0;
+        $theproduct = Product::find($product['product_id']);
+        $productPrice = $theproduct->price;
+        $totalPrice += $productPrice * $product['quantity'];
+        $PointsToAdd += $theproduct->points * $product['quantity'];
+    }
 
-        foreach ($request->products as $product) {
-            Cart::create([
-                'order_id' => $order->id,
-                'product_id' => $product['product_id'],
-                'quantity' => $product['quantity'],
-            ]);
-            $productPrice = Product::find($product['product_id'])->price;
-            $totalPrice += $productPrice * $product['quantity'];
-        }
-        $order->totalPrice = $totalPrice;
-        $order->save();
+    $order->totalPrice = $totalPrice;
+    $order->points = $PointsToAdd; 
+    $order->save();
 
+    $user->userPoints += $PointsToAdd;
+    $user->save();
+
+    return response()->json([
+        'theOrder' => $order,
+    ]);
+}
+
+public function orderDetails($order_id)
+{
+    $order = Order::where('id', $order_id)->with('carts.product:id,name,price')->first();
+
+    return response()->json([
+        'carts' => $order ? $order->carts : [],
+    ], 200);
+}
+
+public function deleteOrder($order_id)
+{
+    $order = Order::where(['id' => $order_id, 'state' => 'pending'])->first();
+
+    if (!$order) {
         return response()->json([
-            'theOrder' => $order,
-        ]);
+            'message' => 'You cannot remove the order',
+        ], 403);
     }
 
-    public function orderDetails($order_id)
-    {
-        return response([
-            'carts' => order::where('id', $order_id)->with('carts.product:id,name,price')->get(),
-        ], 200);
+    // Deduct points from the user
+    $user = auth()->user();
+    $user->userPoints -= $order->points;
+    $user->save();
+
+    $order->delete();
+
+    return response()->json([
+        'message' => 'The order was deleted successfully',
+    ], 200);
+}
+
+public function updateEssentialOrder(Request $request, $orderId)
+{
+    $order = Order::find($orderId);
+
+    if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
+        return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
     }
 
-    public function deleteOrder($order_id)
-    {
-        $order = Order::where(['id' => $order_id, 'state' => 'pending'])->first();
+    $request->validate([
+        'products.*' => 'required|array',
+        'type' => 'sometimes|in:urgent,regular,stored',
+        'storingTime' => 'required_if:type,stored|integer'
+    ]);
 
-        if (!$order) {
-            return response()->json([
-                'message' => 'You cannot remove the order',
-            ], 200);
-        }
-        $order->delete();
-        return response()->json([
-            'message' => 'The order was deleted successfully',
-        ], 200);
-    }
-    public function updateEssentialOrder(Request $request, $orderId)
-    {
-        $order = Order::find($orderId);
-
-        if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
-            return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
-        }
-
-        $request->validate([
-            'products.*' => 'required|array',
-            'type' => 'sometimes|in:urgent,regular,stored',
-            'storingTime' => 'required_if:type,stored|integer'
-        ]);
-
-        if (!$request->has('type')) {
-            $request->merge(['type' => 'regular']);
-        }
-
-        $order->type = $request->type;
-        $order->save();
-
-        $totalPrice = 0;
-        $AllQuantity = 0;
-
-
-        Cart::where('order_id', $order->id)->delete();
-
-        foreach ($request->products as $product) {
-            Cart::create([
-                'order_id' => $order->id,
-                'product_id' => $product['product_id'],
-                'quantity' => $product['quantity'],
-            ]);
-            $productPrice = Product::find($product['product_id'])->price;
-            $totalPrice += $productPrice * $product['quantity'];
-            $AllQuantity += $product['quantity'];
-        }
-
-        $AllPrice = 0;
-
-        if ($request->type == "stored") {
-            $configPath = config_path('staticPrice.json');
-            $config = json_decode(File::get($configPath), true);
-            $storePrice = $config['storePrice'];
-            $AllPrice = $storePrice * $request->storingTime * $AllQuantity;
-
-            StoredOrder::updateOrCreate(
-                ['order_id' => $order->id],
-                ['storingTime' => $request->storingTime]
-            );
-        } else {
-            StoredOrder::where('order_id', $order->id)->delete();
-        }
-
-        if ($request->type == "urgent") {
-            $configPath = config_path('staticPrice.json');
-            $config = json_decode(File::get($configPath), true);
-            $urgentPrice = $config['urgentPrice'];
-            $AllPrice = $urgentPrice * $AllQuantity;
-        }
-
-        $order->totalPrice = $totalPrice + $AllPrice;
-        $order->save();
-
-        return response()->json([
-            'theOrder' => $order,
-        ]);
+    if (!$request->has('type')) {
+        $request->merge(['type' => 'regular']);
     }
 
-    public function updateExtraOrder(Request $request, $orderId)
-    {
-        $order = Order::find($orderId);
+    $order->type = $request->type;
+    $order->save();
 
-        if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
-            return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
-        }
+    $totalPrice = 0;
+    $AllQuantity = 0;
+    $PointsToAdd = 0;
 
-        $request->validate([
-            'products.*' => 'required|array',
+    Cart::where('order_id', $order->id)->delete();
+
+    foreach ($request->products as $product) {
+        Cart::create([
+            'order_id' => $order->id,
+            'product_id' => $product['product_id'],
+            'quantity' => $product['quantity'],
         ]);
 
-        $totalPrice = 0;
-
-
-        Cart::where('order_id', $order->id)->delete();
-
-        foreach ($request->products as $product) {
-            Cart::create([
-                'order_id' => $order->id,
-                'product_id' => $product['product_id'],
-                'quantity' => $product['quantity'],
-            ]);
-            $productPrice = Product::find($product['product_id'])->price;
-            $totalPrice += $productPrice * $product['quantity'];
-        }
-
-        $order->totalPrice = $totalPrice;
-        $order->save();
-
-        return response()->json([
-            'theOrder' => $order,
-        ]);
+        $theproduct = Product::find($product['product_id']);
+        $productPrice = $theproduct->price;
+        $totalPrice += $productPrice * $product['quantity'];
+        $AllQuantity += $product['quantity'];
+        $PointsToAdd += $theproduct->points * $product['quantity'];
     }
+
+    // Adjust user points
+    $user = auth()->user();
+    $user->userPoints -= $order->points;  // Remove old points
+    $user->userPoints += $PointsToAdd;    // Add new points
+    $user->save();
+
+    $order->points = $PointsToAdd;  // Update the order points
+
+    $AllPrice = 0;
+
+    if ($request->type == "stored") {
+        $configPath = config_path('staticPrice.json');
+        $config = json_decode(File::get($configPath), true);
+        $storePrice = $config['storePrice'];
+        $AllPrice = $storePrice * $request->storingTime * $AllQuantity;
+
+        StoredOrder::updateOrCreate(
+            ['order_id' => $order->id],
+            ['storingTime' => $request->storingTime]
+        );
+    } else {
+        StoredOrder::where('order_id', $order->id)->delete();
+    }
+
+    if ($request->type == "urgent") {
+        $configPath = config_path('staticPrice.json');
+        $config = json_decode(File::get($configPath), true);
+        $urgentPrice = $config['urgentPrice'];
+        $AllPrice = $urgentPrice * $AllQuantity;
+    }
+
+    $order->totalPrice = $totalPrice + $AllPrice;
+    $order->save();
+
+    return response()->json([
+        'theOrder' => $order,
+    ]);
+}
+
+public function updateExtraOrder(Request $request, $orderId)
+{
+    $order = Order::find($orderId);
+
+    if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
+        return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
+    }
+
+    $request->validate([
+        'products.*' => 'required|array',
+    ]);
+
+    $totalPrice = 0;
+    $PointsToAdd = 0;
+
+    Cart::where('order_id', $order->id)->delete();
+
+    foreach ($request->products as $product) {
+        Cart::create([
+            'order_id' => $order->id,
+            'product_id' => $product['product_id'],
+            'quantity' => $product['quantity'],
+        ]);
+
+        $theproduct = Product::find($product['product_id']);
+        $productPrice = $theproduct->price;
+        $totalPrice += $productPrice * $product['quantity'];
+        $PointsToAdd += $theproduct->points * $product['quantity'];
+    }
+
+    // Adjust user points
+    $user = auth()->user();
+    $user->userPoints -= $order->points;  // Remove old points
+    $user->userPoints += $PointsToAdd;    // Add new points
+    $user->save();
+
+    $order->points = $PointsToAdd;  // Update the order points
+
+    $order->totalPrice = $totalPrice;
+    $order->save();
+
+    return response()->json([
+        'theOrder' => $order,
+    ]);
+}
 
     public function ordresOfuser()
     {
