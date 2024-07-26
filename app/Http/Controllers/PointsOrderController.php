@@ -72,7 +72,7 @@ class PointsOrderController extends Controller
             ], 200);
         }
     
-        public function deleteOrder($pointsOrder_id)
+        public function deletePointsOrder($pointsOrder_id)
         {
             $pointsOrder = PointsOrder::where(['id' => $pointsOrder_id, 'state' => 'pending'])->first();
     
@@ -141,7 +141,7 @@ class PointsOrderController extends Controller
             ]);
         }
     
-        public function ordersOfUser()
+        public function pointsOrdersOfUser()
 {
     $user = auth()->user();
     $pointsOrder = PointsOrder::where('user_id', $user->id)->get();
@@ -151,7 +151,7 @@ class PointsOrderController extends Controller
     ], 200);
 }
 
-public function preparingOrder($pointsOrder_id)
+public function preparingPointsOrder($pointsOrder_id)
 {
     $pointsOrder = PointsOrder::where(['id' => $pointsOrder_id, 'state' => 'pending'])->first();
 
@@ -167,7 +167,7 @@ public function preparingOrder($pointsOrder_id)
     }
 }
 
-public function sentOrder($pointsOrder_id)
+public function sentPointsOrder($pointsOrder_id)
 {
     $pointsOrder = PointsOrder::where([['id', $pointsOrder_id], ['state', 'preparing']])->first();
 
@@ -185,7 +185,7 @@ public function sentOrder($pointsOrder_id)
     }
 }
 
-public function receivedOrder($pointsOrder_id)
+public function receivedPointsOrder($pointsOrder_id)
 {
     $pointsOrder = PointsOrder::where(['id' => $pointsOrder_id, 'state' => 'sent'])->first();
 

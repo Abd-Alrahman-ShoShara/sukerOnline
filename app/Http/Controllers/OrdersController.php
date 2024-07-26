@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
-use App\Models\ClassificationProduct;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\StoredOrder;

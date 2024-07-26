@@ -6,6 +6,7 @@ use App\Http\Controllers\ClassificationController;
 use App\Http\Controllers\ComplaintsAndSuggestionController;
 use App\Http\Controllers\MaintenanceModeController;
 use App\Http\Controllers\OrdersController;
+use App\Http\Controllers\PointsOrderController;
 use App\Http\Controllers\PointsProductController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RateAndReviewController;
@@ -100,6 +101,19 @@ Route::post('/sentOrder/{order_id}', [OrdersController::class, 'sentOrder']);
 Route::post('/receivedOrder/{order_id}', [OrdersController::class, 'receivedOrder']);
 
 Route::get('/ordresOfuser', [OrdersController::class, 'ordresOfuser'])->middleware('auth:api');
+
+////////////////////////////////////////////////////////////// PointsOrder //////////////////// 
+
+Route::post('/createPointsOrder', [PointsOrderController::class, 'createPointsOrder'])->middleware('auth:api');
+Route::get('/pointsOrderDetails/{pointsOrder_id}', [PointsOrderController::class, 'pointsOrderDetails']);
+Route::delete('/deletePointsOrder/{pointsOrder_id}', [PointsOrderController::class, 'deletePointsOrder']);
+Route::post('/updatePointsOrder/{pointsOrder_id}', [PointsOrderController::class, 'updatePointsOrder']);
+Route::post('/pointsOrdersOfUser', [PointsOrderController::class, 'pointsOrdersOfUser'])->middleware('auth:api');
+
+Route::post('/preparingPointsOrder/{PointsOrder_id}', [PointsOrderController::class, 'preparingPointsOrder']);
+Route::post('/sentPointsOrder/{PointsOrder_id}', [PointsOrderController::class, 'sentPointsOrder']);
+Route::post('/receivedPointsOrder/{PointsOrder_id}', [PointsOrderController::class, 'receivedPointsOrder']);
+
 
 ////////////////////////////////////////////////////////////// Complaints Or Suggestion //////////////////// 
 
