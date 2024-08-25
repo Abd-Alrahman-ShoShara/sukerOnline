@@ -29,7 +29,7 @@ class AuthenticationController extends Controller
             'password' => Hash::make($request->password),
             'adress' => $request->adress,
             'classification_id' => $request->classification_id,
-            'nameOfStore' => $request->nameOfStore, 
+            'nameOfStore' => $request->nameOfStore,
         ]);
 
         // $token = $user->createToken('auth_token')->accessToken;
@@ -43,7 +43,7 @@ class AuthenticationController extends Controller
         return response([
             'message' => 'User registered successfully. Please enter the verification code.',
             'user_id' => $user->id,
-           
+
         ]);
     }
     /////////////////////////////////////////////////////////////////////
@@ -102,7 +102,7 @@ class AuthenticationController extends Controller
         return response([
             'message' => 'The code was sent. Please enter it to verification.',
             'user_id' => $user->id,
-           
+
         ]);
 
     }
@@ -113,34 +113,34 @@ class AuthenticationController extends Controller
             'user_id' => 'required|exists:users,id',
             'code' => 'required',
         ]);
-    
+
         $user = User::findOrFail($request->user_id);
-    
+
         if ($user->verification_code == $request->code) {
 
             //  $token=$user->createToken('auth_token')->accessToken;
 
             return response([
                 'message' => 'Verification successful. enter the new password.',
-                
+
             ],200);
         } else {
             return response([
                 'message' => 'Invalid verification code.',
             ], 422);
         }
-    
+
     }
-    
+
     /////////////////////////////////////////////////////
     public function resatPassword(Request $request){
         $request->validate([
-            'user_id' => 'required|exists:users,id', 
+            'user_id' => 'required|exists:users,id',
             'password'=>'required|min:6|confirmed',
         ]);
          $user = User::findOrFail($request->user_id);
          $user-> update(['password' => Hash::make($request['password'])]);
-         
+
         $token=$user->createToken('auth_token')->accessToken;
 
          return response()->json([
@@ -151,15 +151,15 @@ class AuthenticationController extends Controller
     }
     ///////////////////////////////////////////
     public function resatPasswordEnternal(Request $request){
-   
+
     $request->validate([
         'password' => 'required|min:6',
         'NewPassword' => 'required|min:6|confirmed',
     ]);
 
-    
+
     if (Hash::check($request->password, auth()->user()->password)) {
-        
+
         auth()->user()->update(['password' => Hash::make($request['NewPassword'])]);
         return response()->json([
             'message' => 'The password has been updated.',
@@ -182,7 +182,7 @@ class AuthenticationController extends Controller
         $client = new WhatsAppApi($ultramsg_token, $instance_id);
         $number = "+963" . substr($phoneNumber, 1, 9);
         $to = $number;
-        
+
         $body = 'Hi ' . $name . ', your verification code is: ' . $code ;
         $client->sendChatMessage($to, $body);
         // return $this->success(null, 'we send the code');
@@ -196,23 +196,23 @@ class AuthenticationController extends Controller
             'phone' => 'required',
             'password' => 'required'
         ]);
-    
+
         $user = User::where('phone', $request->phone)->first();
-    
+
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response([
                 'message' => 'The provided credentials are incorrect'
             ], 403);
         }
-    
+
         if ($user->role == '0') {
             $user->type = 'admin';
         } else {
             $user->type = 'user';
         }
-    
+
         $token = $user->createToken('auth_token')->accessToken;
-    
+
         return response([
             'user' => $user,
             'token' => $token
@@ -224,7 +224,7 @@ class AuthenticationController extends Controller
     //         'phone' => 'required',
     //         'password' => 'required'
     //     ]);
-       
+
     //     $user = User::where('phone', $request->phone)->first();
 
     //     if ($user->role == '0') {
@@ -249,9 +249,7 @@ class AuthenticationController extends Controller
 
     public function userInfo(){
         return response()->json([
-            'userInfo'=>Auth::user(),
+            'user'=> User::where('id',Auth::user()->id)->with('classification')->get(),
         ]);
     }
-
-   
 }

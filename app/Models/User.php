@@ -63,7 +63,7 @@ class User extends Authenticatable
         return $this->hasMany(RateAndReview::class);
     }
     public function classification(){
-        return $this->belongsTo(Classification::class);
+        return $this->belongsTo(Classification::class,'classification_id');
     }
 
 }

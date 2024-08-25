@@ -73,7 +73,7 @@ class PointsProductController extends Controller
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
         ]);
 
-      
+
         // Handle image uploads
         $imageUrls = [];
         if ($request->hasFile('images')) {
@@ -130,6 +130,18 @@ class PointsProductController extends Controller
 
         return response()->json([
             'afterUpdate' => $PointsProduct->fresh(),
+        ]);
+    }
+    public function PointsProducts()
+    {
+        $PointsProducts = PointsProduct::all();
+        $PointsProducts = $PointsProducts->map(function ($product) {
+            $product->images = json_decode($product->images);
+            return $product;
+        });
+
+        return response()->json([
+            'PointsProducts' => $PointsProducts,
         ]);
     }
 

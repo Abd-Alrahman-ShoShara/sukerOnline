@@ -20,66 +20,66 @@ class OrdersController extends Controller
             'type' => 'sometimes|in:urgent,regular,stored',
             'storingTime' => 'required_if:type,stored|integer'
         ]);
-    
+
         if (!$request->has('type')) {
             $request->merge(['type' => 'regular']);
         }
-    
+
         $user = Auth::user();
         $order = Order::create([
             'user_id' => $user->id,
             'type' => $request->type,
         ]);
-    
+
         $PointsToAdd = 0;
         $totalPrice = 0;
         $AllQuantity = 0;
-    
+
         foreach ($request->products as $product) {
             Cart::create([
                 'order_id' => $order->id,
                 'product_id' => $product['product_id'],
                 'quantity' => $product['quantity'],
             ]);
-    
+
             $theproduct = Product::find($product['product_id']);
             $productPrice = $theproduct->price;
             $totalPrice += $productPrice * $product['quantity'];
             $AllQuantity += $product['quantity'];
             $PointsToAdd += $theproduct->points * $product['quantity'];
         }
-    
+
         $user->userPoints += $PointsToAdd;
         $user->save();
-    
+
         $AllPrice = 0;
-    
+
         if ($request->type == "stored") {
             $configPath = config_path('staticPrice.json');
             $config = json_decode(File::get($configPath), true);
             $storePrice = $config['storePrice'];
             $AllPrice = $storePrice * $request->storingTime * $AllQuantity;
-    
+
             StoredOrder::create([
                 'order_id' => $order->id,
                 'storingTime' => $request->storingTime,
             ]);
         }
-    
+
         if ($request->type == "urgent") {
             $configPath = config_path('staticPrice.json');
             $config = json_decode(File::get($configPath), true);
             $urgentPrice = $config['urgentPrice'];
             $AllPrice = $urgentPrice * $AllQuantity;
         }
-    
+
         $order->totalPrice = $totalPrice + $AllPrice;
-        $order->points = $PointsToAdd; 
+        $order->points = $PointsToAdd;
         $order->save();
-    
+
         return response()->json([
             'theOrder' => $order,
-            
+
         ]);
     }
 
@@ -114,7 +114,7 @@ class OrdersController extends Controller
     }
 
     $order->totalPrice = $totalPrice;
-    $order->points = $PointsToAdd; 
+    $order->points = $PointsToAdd;
     $order->save();
 
     $user->userPoints += $PointsToAdd;
@@ -295,12 +295,29 @@ public function updateExtraOrder(Request $request, $orderId)
     ]);
 }
 
-    public function ordresOfuser()
+    public function ordersOfuser()
     {
         return response([
             'orders' => Order::where('user_id', auth()->user()->id)->get()
         ], 200);
     }
+
+    public function storedOrdersOfuser()
+    {
+        return response([
+            'orders' => Order::where([['user_id', auth()->user()->id],[
+                'type','stored'
+            ]])->get()
+        ], 200);
+    }
+
+    public function notStoredOrdersOfuser()
+    {
+        return response([
+            'orders' => Order::where([['user_id', auth()->user()->id],['type','!=','stored']])->get()
+        ], 200);
+    }
+
 
     public function preparingOrder($order_id)
     {
@@ -361,9 +378,9 @@ public function updateExtraOrder(Request $request, $orderId)
             'start_date' => 'required_with:end_date|date|date_format:Y-m-d',
             'end_date' => 'required_with:start_date|date|date_format:Y-m-d|after_or_equal:start_date',
         ]);
-    
+
         $userId = Auth::user()->id;
-    
+
         if ($request->has('date')) {
             $orders = Order::where('user_id', $userId)
                 ->whereDate('created_at', $request->date)
@@ -378,11 +395,11 @@ public function updateExtraOrder(Request $request, $orderId)
                 ])
                 ->get();
         }
-    
+
         if ($orders->isEmpty()) {
             return response()->json(['message' => 'No orders found for the specified date or date range.']);
         }
-    
+
         $report = $orders->map(function ($order) {
             $items = Cart::where('order_id', $order->id)->get()->map(function ($item) {
                 $product = Product::find($item->product_id);
@@ -394,7 +411,7 @@ public function updateExtraOrder(Request $request, $orderId)
                     'total' => $product->price * $item->quantity,
                 ];
             });
-    
+
             return [
                 'order_id' => $order->id,
                 'user_id' => $order->user_id,
@@ -404,7 +421,7 @@ public function updateExtraOrder(Request $request, $orderId)
                 'items' => $items,
             ];
         });
-    
+
         return response()->json([
             'report' => $report
         ]);

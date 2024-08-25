@@ -120,7 +120,7 @@ class ProductController extends Controller
             $imageUrls = json_decode($product->images, true);
         }
 
-        
+
         $product->update([
             'name' => $request->input('name'),
             'price' => $request->input('price'),
@@ -131,7 +131,7 @@ class ProductController extends Controller
             'images' => $imageUrls ? json_encode($imageUrls) : null,
         ]);
 
-        
+
         ClassificationProduct::where('product_id', $product->id)->delete();
         if (!$request->is_public) {
             foreach ($request->input('classifications') as $classification) {
@@ -163,7 +163,7 @@ class ProductController extends Controller
     public function productsAdmin($type)
     {
         $sukerProducts = Product::where('type',$type)->get();
-  
+
         if ($sukerProducts->isEmpty()) {
             return response()->json([
                 'message' => 'There are no '.$type.' products',
@@ -174,7 +174,7 @@ class ProductController extends Controller
             'the_'.$type.'_products' => $sukerProducts,
         ], 200);
     }
-   
+
     //////////////////////////////////////
 
     public function Products($type)
@@ -192,11 +192,18 @@ class ProductController extends Controller
             })
             ->where('type', $type)
             ->get();
+
+
         if ($products->isEmpty()) {
             return response()->json([
                 'message' => 'There are no '. $type .' products that are set to display for your classification',
             ], 404);
         }
+
+        $products = $products->map(function ($product) {
+            $product->images = json_decode($product->images);
+            return $product;
+        });
 
         return response()->json([
             'the_'.$type.'_products' => $products,

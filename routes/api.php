@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Route;
 /////////////////////////////////////////////Auth
 Route::middleware('auth:api')->group( function () {
     Route::post('/logout',[AuthenticationController::class,'logout']);
-    
+
     Route::post('/resatPasswordEnternal',[AuthenticationController::class,'resatPasswordEnternal']);
 });
 
@@ -57,6 +57,7 @@ Route::delete('/productsDelete/{id}', [ProductController::class, 'deleteProduct'
 
 Route::post('/AddPointsProduct',[PointsProductController::class,'AddPointsProduct']);
 Route::get('/PointsProductDetails/{id}', [PointsProductController::class, 'PointsProductDetails']);
+Route::get('/PointsProducts', [PointsProductController::class, 'PointsProducts']);
 Route::post('/updatePointsProduct/{id}', [PointsProductController::class, 'updatePointsProduct']);
 Route::post('/onOffPointsProduct/{id}', [PointsProductController::class, 'onOffPointsProduct']);
 Route::delete('/deletePointsProduct/{id}', [PointsProductController::class, 'deletePointsProduct']);
@@ -100,9 +101,12 @@ Route::post('/preparingOrder/{order_id}', [OrdersController::class, 'preparingOr
 Route::post('/sentOrder/{order_id}', [OrdersController::class, 'sentOrder']);
 Route::post('/receivedOrder/{order_id}', [OrdersController::class, 'receivedOrder']);
 
-Route::get('/ordresOfuser', [OrdersController::class, 'ordresOfuser'])->middleware('auth:api');
+Route::get('/ordersOfuser', [OrdersController::class, 'ordersOfuser'])->middleware('auth:api');
 
-////////////////////////////////////////////////////////////// PointsOrder //////////////////// 
+Route::get('/storedOrdersOfuser', [OrdersController::class, 'storedOrdersOfuser'])->middleware('auth:api');
+Route::get('/notStoredOrdersOfuser', [OrdersController::class, 'notStoredOrdersOfuser'])->middleware('auth:api');
+
+////////////////////////////////////////////////////////////// PointsOrder ////////////////////
 
 Route::post('/createPointsOrder', [PointsOrderController::class, 'createPointsOrder'])->middleware('auth:api');
 Route::get('/pointsOrderDetails/{pointsOrder_id}', [PointsOrderController::class, 'pointsOrderDetails']);
@@ -115,10 +119,11 @@ Route::post('/sentPointsOrder/{PointsOrder_id}', [PointsOrderController::class, 
 Route::post('/receivedPointsOrder/{PointsOrder_id}', [PointsOrderController::class, 'receivedPointsOrder']);
 
 
-////////////////////////////////////////////////////////////// Complaints Or Suggestion //////////////////// 
+////////////////////////////////////////////////////////////// Complaints Or Suggestion ////////////////////
 
 Route::post('/createComplaintsOrSuggestion', [ComplaintsAndSuggestionController::class, 'createComplaintsOrSuggestion'])->middleware('auth:api');
 Route::get('/ComplaintsOrSuggestionDetails/{ComplaintsOrSuggestion_id}', [ComplaintsAndSuggestionController::class, 'ComplaintsOrSuggestionDetails']);
+Route::get('/ComplaintsOrSuggestionUser', [ComplaintsAndSuggestionController::class, 'ComplaintsOrSuggestionUser'])->middleware('auth:api');
 
 Route::post('/createRateAndReview', [RateAndReviewController::class, 'createRateAndReview'])->middleware('auth:api');
 Route::get('/RateAndReviewDetails/{RateAndReview_id}', [RateAndReviewController::class, 'RateAndReviewDetails']);
