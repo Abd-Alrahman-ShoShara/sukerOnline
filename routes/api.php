@@ -139,8 +139,8 @@ Route::post('/orderByStateForAdmin', [OrdersController::class, 'orderByStateForA
 
 
 /////////////////////////////////////////////////////////////////////maintenance
-Route::post('/admin/maintenance-mode', [MaintenanceModeController::class, 'setMaintenanceMode']);
-Route::get('/admin/maintenance-mode', [MaintenanceModeController::class, 'getMaintenanceMode']);
+Route::post('/AppOnOff', [AttributeController::class, 'AppOnOff']);
 
-
-Route::middleware(['auth', 'check.maintenance'])->resource('orders', OrdersController::class);
+Route::middleware(['OnOffApp'])->group(function () {
+    
+});

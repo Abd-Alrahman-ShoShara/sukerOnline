@@ -69,7 +69,7 @@ class AttributeController extends Controller
     {
         $configPath = config_path('phoneNumbers.json');
         $config = json_decode(File::get($configPath), true);
-
+        
         return response()->json([
             'Num1' => $config['Num1'],
             'Num2' => $config['Num2'],
@@ -83,23 +83,23 @@ class AttributeController extends Controller
             'Num2' => 'required|string',
             'Num3' => 'required|string',
         ]);
-
+        
         $configPath = config_path('phoneNumbers.json');
         $config = json_decode(File::get($configPath), true);
-
+        
         $config['Num1'] = $request->Num1;
         $config['Num2'] = $request->Num2;
         $config['Num3'] = $request->Num3;
         
-
+        
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
-
+        
         return response()->json([
             'message' => 'abouteUs updated successfully',
         ]);
     }
-
-
+    
+    
     
     public function updateStorePrice(Request $request)
     {
@@ -123,7 +123,7 @@ class AttributeController extends Controller
     {
         $configPath = config_path('staticPrice.json');
         $config = json_decode(File::get($configPath), true);
-    
+        
         return response()->json([
             'storePrice' => $config['storePrice'],
             'urgentPrice' => $config['urgentPrice'],
@@ -148,4 +148,26 @@ class AttributeController extends Controller
         ]);
     }
     
+    public function AppOnOff()
+    {
+        $configPath = config_path('appWorking.json');
+    
+        if (!File::exists($configPath)) {
+            return response()->json(['message' => 'Configuration file not found.'], 404);
+        }
+    
+        $config = json_decode(File::get($configPath), true);
+    
+        if ($config === null) {
+            return response()->json(['message' => 'Invalid JSON format.'], 400);
+        }
+    
+        $config['isActive'] = !$config['isActive'];
+    
+        File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
+    
+        return response()->json([
+            'message' => $config['isActive'] ? 'App is now active' : 'App is now inactive',
+        ]);
+    }
 }
