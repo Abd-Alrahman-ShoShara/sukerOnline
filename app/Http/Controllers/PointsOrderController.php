@@ -157,16 +157,25 @@ class PointsOrderController extends Controller
             ]);
         }
     
-        public function pointsOrdersOfUser()
-{
-    $user = auth()->user();
-    $pointsOrder = PointsOrder::where('user_id', $user->id)->get();
-
-    return response()->json([
-        'pointsOrder' => $pointsOrder
-    ], 200);
-}
-
+        public function pointsOrdersOfUser(Request $request)
+        {
+        
+            $attrs = $request->validate([
+                'sortBy' => 'sometimes|in:newest,urgent,preparing,sent,received',
+            ]);
+        
+            if ($request->has('sortBy')&& $attrs['sortBy'] != 'newest') {
+            $pointsOrder = PointsOrder::where([['user_id', auth()->user()->id],['state',$attrs['sortBy']]])->get();
+            }else{
+                $pointsOrder = PointsOrder::where([['user_id', auth()->user()->id]])->get();
+            }
+        
+            $pointsOrder=$pointsOrder->sortBy('created_at')->values();
+        
+            return response()->json([
+                'pointsOrder' => $pointsOrder
+            ], 200);
+        }
 public function preparingPointsOrder($pointsOrder_id)
 {
     $pointsOrder = PointsOrder::where(['id' => $pointsOrder_id, 'state' => 'pending'])->first();

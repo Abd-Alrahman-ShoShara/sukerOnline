@@ -311,10 +311,22 @@ public function updateExtraOrder(Request $request, $orderId)
         ], 200);
     }
 
-    public function notStoredOrdersOfuser()
+    public function notStoredOrdersOfuser(Request $request)
     {
+        $attrs = $request->validate([
+            'sortBy' => 'sometimes|in:newest,urgent,preparing,sent,received',
+        ]);
+
+        if ($request->has('sortBy')&& $attrs['sortBy'] != 'newest') {
+        $order = Order::where([['user_id', auth()->user()->id],['type','!=','stored'],['state',$attrs['sortBy']]])->get();
+        }else{
+            $order = Order::where([['user_id', auth()->user()->id],['type','!=','stored']])->get();
+        }
+
+        $order=$order->sortBy('created_at')->values();
+
         return response([
-            'orders' => Order::where([['user_id', auth()->user()->id],['type','!=','stored']])->get()
+            'orders' => $order
         ], 200);
     }
 
