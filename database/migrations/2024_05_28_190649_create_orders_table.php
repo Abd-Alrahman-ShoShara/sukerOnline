@@ -19,7 +19,6 @@ return new class extends Migration
             $table->enum('state',['pending','preparing','sent','received'])->default('pending');
             $table->enum('type',['urgent','regular','stored'])->default('regular');
             $table->double('totalPrice')->default(0);
-            $table->boolean('ReadOrNot')->default(false);
             $table->timestamps();
         });
     }

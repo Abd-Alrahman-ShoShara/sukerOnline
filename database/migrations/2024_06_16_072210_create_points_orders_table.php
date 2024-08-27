@@ -18,7 +18,6 @@ return new class extends Migration
             $table->foreign("user_id")->references('id')->on("users")->onDelete('cascade');
             $table->enum('state',['pending','preparing','sent','received'])->default('pending');
             $table->double('totalPrice')->default(0);
-            $table->boolean('ReadOrNot')->default(false);
             $table->timestamps();
         });
     }
