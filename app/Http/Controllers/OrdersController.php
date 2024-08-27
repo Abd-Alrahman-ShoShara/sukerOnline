@@ -314,7 +314,7 @@ public function updateExtraOrder(Request $request, $orderId)
     public function notStoredOrdersOfuser(Request $request)
     {
         $attrs = $request->validate([
-            'sortBy' => 'sometimes|in:newest,urgent,preparing,sent,received',
+            'sortBy' => 'sometimes|in:newest,pending,preparing,sent,received',
         ]);
 
         if ($request->has('sortBy')&& $attrs['sortBy'] != 'newest') {
@@ -527,7 +527,7 @@ public function orderByStateForAdmin(Request $request)
 
 public function NormalOrders(Request $request){
     $attrs = $request->validate([
-        'sortBy' => 'sometimes|in:newest,urgent,preparing,sent,received',
+        'sortBy' => 'sometimes|in:newest,pending,preparing,sent,received',
     ]);
 
     if ($request->has('sortBy')&& $attrs['sortBy'] != 'newest') {
