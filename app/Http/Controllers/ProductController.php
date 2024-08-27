@@ -67,7 +67,7 @@ class ProductController extends Controller
 
      public function ProdctsDetails($product_id)
     {
-        $iteam = ClassificationProduct::where('product_id', $product_id)->with('product', 'classification')->get();
+        $iteam = Product::where('id', $product_id)->first();
 
         if (!$iteam) {
             return response()->json([
@@ -212,15 +212,26 @@ class ProductController extends Controller
 
     public function onOffProduct($product_id)
     {
-        $classificationProduct = ClassificationProduct::findOrFail($product_id);
+        $classificationProduct = ClassificationProduct::find($product_id);
+        $product=Product::find($product_id);
+        if($classificationProduct){
+        
+            $classificationProduct->update([
+                'displayOrNot' => !$classificationProduct->displayOrNot,
+            ]);
+            return response()->json([
+                'afterUpdate' => $classificationProduct,
+            ]);
+                
+        }else{
+            $product->update([
+                'displayOrNot' => !$product->displayOrNot,
+            ]);
+            return response()->json([
+                'afterUpdate' => $product,
+            ]);
+        }
 
-        $classificationProduct->update([
-            'displayOrNot' => !$classificationProduct->displayOrNot,
-        ]);
-
-        return response()->json([
-            'afterUpdate' => $classificationProduct->fresh(),
-        ]);
     }
 
     public function searchProduct($name){
