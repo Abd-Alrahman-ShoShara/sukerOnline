@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use PhpParser\Node\Stmt\Else_;
 
 class OrdersController extends Controller
 {
@@ -295,101 +296,61 @@ public function updateExtraOrder(Request $request, $orderId)
     ]);
 }
 
-    public function ordersOfuser()
-    {
-        return response([
-            'orders' => Order::where('user_id', auth()->user()->id)->get()
-        ], 200);
-    }
 
-    public function storedOrdersOfuser()
-    {
-        $orders= Order::where([['user_id', auth()->user()->id],[
-            'type','stored'
-        ]])->with('storedOrders')->get();
-        $orders=$orders->sortByDesc('created_at')->values();
-        return response([
-            'orders'=>$orders,
-        ], 200);
-    }
+public function editStateOfOrder(Request $request, $order_id)
+{
+    $request->validate([
+        'state' => 'required|in:preparing,sent,received'
+    ]);
 
-    public function notStoredOrdersOfuser(Request $request)
-    {
-        $attrs = $request->validate([
-            'sortBy' => 'sometimes|in:pending,preparing,sent,received',
-        ]);
+    $order = Order::find($order_id);
 
-        if ($request->has('sortBy')) {
-        $order = Order::where([['user_id', auth()->user()->id],['type','!=','stored'],['state',$attrs['sortBy']]])->get();
-        }else{
-            $order = Order::where([['user_id', auth()->user()->id],['type','!=','stored']])->get();
+    if ($order) {
+        switch ($request->input('state')) {
+            case 'preparing':
+                if ($order->state == 'pending') {
+                    $order->update(['state' => $request->input('state')]);
+                    return response()->json([
+                        'message' => 'Order state updated successfully'
+                    ]);
+                } else {
+                    return response()->json([
+                        'message' => 'Order is not in the pending state'
+                    ], 403);
+                }
+            case 'sent':
+                if ($order->state == 'preparing') {
+                    $order->update(['state' => $request->input('state')]);
+                    return response()->json([
+                        'message' => 'Order state updated successfully'
+                    ]);
+                } else {
+                    return response()->json([
+                        'message' => 'Order is not in the preparing state'
+                    ], 403);
+                }
+            case 'received':
+                if ($order->state == 'sent') {
+                    $order->update(['state' => $request->input('state')]);
+                    return response()->json([
+                        'message' => 'Order state updated successfully'
+                    ]);
+                } else {
+                    return response()->json([
+                        'message' => 'Order is not in the sent state'
+                    ], 403);
+                }
+            default:
+                return response()->json([
+                    'message' => 'Invalid state'
+                ], 403);
         }
-
-        $order=$order->sortByDesc('created_at')->values();
-
-        if($order->isEmpty()){
-            return response()->json([
-                'message'=>'threr is no Order',
-            ]);
-        }
-
-        return response([
-            'orders' => $order
-        ], 200);
+    } else {
+        return response()->json([
+            'message' => 'Order not found'
+        ], 404);
     }
-
-
-    public function preparingOrder($order_id)
-    {
-        $order = Order::where(['id' => $order_id, 'state' => 'pending'])->first();
-
-        if ($order) {
-            $order->update(['state' => 'preparing']);
-            return response()->json([
-                'message' => 'order state is updating successfully'
-            ], 403);
-        } else {
-            return response()->json([
-                'message' => 'it is not possible to edit due to preparing'
-            ], 403);
-        }
-    }
-
-    public function sentOrder($order_id)
-    {
-        $order = Order::where([['id', $order_id], ['state', 'preparing']])->first();
-
-        if ($order) {
-            $order->update(['state' => 'sent']);
-
-            return response([
-                'message' => 'the order accepted',
-                'state' => 'has_been_sent'
-            ], 200);
-        } else {
-            return response()->json([
-                'message' => 'it is not possible to edit due to has_been_sent'
-            ], 403);
-        }
-    }
-
-    public function receivedOrder($order_id)
-    {
-        $order = Order::where(['id' => $order_id, 'state' => 'sent'])->first();
-
-        if ($order) {
-            $order->update(['state' => 'received']);
-
-            return response([
-                'message' => 'the order accepted',
-                'state' => 'received'
-            ], 200);
-        } else {
-            return response()->json([
-                'message' => 'it is not possible to edit due to received'
-            ], 403);
-        }
-    }
+}
 
     public function reportUserOrders(Request $request)
     {
@@ -541,6 +502,41 @@ public function allOrders(Request $request)
     ]);
 
     $query = Order::query();
+
+    if ($request->has('type')) {
+        $query->where('type', $attrs['type']);
+    }
+
+    if ($request->has('sortBy')) {
+        $query->where('state', $attrs['sortBy']);
+    }
+
+    $orders = $query->with('users')
+                    ->orderByDesc('created_at')
+                    ->get();
+
+    if ($attrs['type'] == 'stored') {
+        $orders->load('storedOrders');
+    }
+
+    if ($orders->isEmpty()) {
+        return response()->json([
+            'message' => 'There is no order.',
+        ]);
+    }
+
+    return response()->json([
+        'Orders' => $orders,
+    ]);
+}
+public function allOrdersUser(Request $request)
+{
+    $attrs = $request->validate([
+        'type' => 'required|in:urgent,regular,stored',
+        'sortBy' => 'sometimes|in:pending,preparing,sent,received',
+    ]);
+
+    $query = Order::where('user_id',Auth::user()->id);
 
     if ($request->has('type')) {
         $query->where('type', $attrs['type']);

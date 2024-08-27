@@ -97,14 +97,11 @@ Route::post('/updateEssentialOrder/{order_id}', [OrdersController::class, 'updat
 Route::post('/updateExtraOrder/{order_id}', [OrdersController::class, 'updateExtraOrder']);
 
 Route::post('/createExtraOrder', [OrdersController::class, 'createExtraOrder'])->middleware('auth:api');
-Route::get('/ordersOfuser', [OrdersController::class, 'ordersOfuser'])->middleware('auth:api');
+Route::post('/allOrdersUser', [OrdersController::class, 'allOrdersUser'])->middleware('auth:api');
 
-Route::get('/storedOrdersOfuser', [OrdersController::class, 'storedOrdersOfuser'])->middleware('auth:api');
-Route::get('/notStoredOrdersOfuser', [OrdersController::class, 'notStoredOrdersOfuser'])->middleware('auth:api');
 ////////////////////////////////////////////////////////////admin
-Route::post('/preparingOrder/{order_id}', [OrdersController::class, 'preparingOrder']);
-Route::post('/sentOrder/{order_id}', [OrdersController::class, 'sentOrder']);
-Route::post('/receivedOrder/{order_id}', [OrdersController::class, 'receivedOrder']);
+Route::post('/editStateOfOrder/{order_id}', [OrdersController::class, 'editStateOfOrder']);
+
 Route::post('/allOrders', [OrdersController::class, 'allOrders']);
 Route::get('/allPointsOrders', [PointsOrderController::class, 'allPointsOrders']);
 ////////////////////////////////////////////////////////////// PointsOrder ////////////////////
@@ -115,10 +112,7 @@ Route::delete('/deletePointsOrder/{pointsOrder_id}', [PointsOrderController::cla
 Route::post('/updatePointsOrder/{pointsOrder_id}', [PointsOrderController::class, 'updatePointsOrder']);
 Route::get('/pointsOrdersOfUser', [PointsOrderController::class, 'pointsOrdersOfUser'])->middleware('auth:api');
 
-Route::post('/preparingPointsOrder/{PointsOrder_id}', [PointsOrderController::class, 'preparingPointsOrder']);
-Route::post('/sentPointsOrder/{PointsOrder_id}', [PointsOrderController::class, 'sentPointsOrder']);
-Route::post('/receivedPointsOrder/{PointsOrder_id}', [PointsOrderController::class, 'receivedPointsOrder']);
-
+Route::post('/editStateOfPointsOrder/{PointsOrder_id}', [PointsOrderController::class, 'editStateOfPointsOrder']);
 
 ////////////////////////////////////////////////////////////// Complaints Or Suggestion ////////////////////
 
