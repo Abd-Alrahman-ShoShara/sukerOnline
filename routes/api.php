@@ -47,7 +47,6 @@ Route::post('/resatPassword',[AuthenticationController::class,'resatPassword']);
 
 Route::get('/userInfo', [AuthenticationController::class, 'userInfo'])->middleware('auth:api');
 Route::post('/allUsers', [AuthenticationController::class, 'allUsers']);
-Route::post('/userOrders/{user_id}', [AuthenticationController::class, 'userOrders']);
 //////////////////////////////////////////////////////////////////////////////// for products
 
 Route::post('/AddProduct',[ProductController::class,'AddProduct']);
@@ -102,6 +101,7 @@ Route::post('/allOrdersUser', [OrdersController::class, 'allOrdersUser'])->middl
 ////////////////////////////////////////////////////////////admin
 Route::post('/editStateOfOrder/{order_id}', [OrdersController::class, 'editStateOfOrder']);
 
+Route::post('/userOrders/{user_id}', [OrdersController::class, 'userOrders']);
 Route::post('/allOrders', [OrdersController::class, 'allOrders']);
 Route::get('/allPointsOrders', [PointsOrderController::class, 'allPointsOrders']);
 ////////////////////////////////////////////////////////////// PointsOrder ////////////////////

@@ -451,27 +451,7 @@ public function editStateOfOrder(Request $request, $order_id)
         'report' => $report
     ]);
 }
-public function orderByState(Request $request, $user_id)
-{
-    $request->validate([
-        'state' => 'required|in:pending,preparing,sent,received',
-    ]);
 
-    $orders = Order::where('user_id', $user_id)
-        ->orderBy('state', $request->state == 'pending' ? 'ASC' : 'DESC')
-        ->get();
-
-    $sortedOrders = [];
-    foreach ($orders as $order) {
-        if ($order->state == $request->state) {
-            array_unshift($sortedOrders, $order);
-        } else {
-            $sortedOrders[] = $order;
-        }
-    }
-
-    return response()->json(['orders' => $sortedOrders]);
-}
 public function orderByStateForAdmin(Request $request)
 {
     $request->validate([
@@ -493,7 +473,6 @@ public function orderByStateForAdmin(Request $request)
     return response()->json(['orders' => $sortedOrders]);
 
 }
-
 public function allOrders(Request $request)
 {
     $attrs = $request->validate([
@@ -562,6 +541,30 @@ public function allOrdersUser(Request $request)
 
     return response()->json([
         'Orders' => $orders,
+    ]);
+}
+
+public function userOrders(Request $request, $user_id)
+{
+    $attrs = $request->validate([
+        'sortBy' => 'sometimes|in:pending,preparing,sent,received,urgent,stored',
+    ]);
+
+    $query = Order::query()->where('user_id', $user_id);
+
+    if ($request->has('sortBy')) {
+
+        if ($attrs['sortBy'] !== 'urgent' && $attrs['sortBy'] !== 'stored') {
+            $query->where('state', $attrs['sortBy']);
+        } else {
+            $query->where('type', $attrs['sortBy']);
+        }
+    }
+
+    $orders = $query->get();
+
+    return response()->json([
+        'ordersOfUsers' => $orders,
     ]);
 }
 }

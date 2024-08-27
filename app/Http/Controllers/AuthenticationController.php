@@ -273,29 +273,6 @@ class AuthenticationController extends Controller
         'users' => $users
     ]);
 }
-    public function userOrders(Request $request, $user_id)
-    {
-        $attrs = $request->validate([
-            'sortBy' => 'sometimes|in:pending,preparing,sent,received,urgent,stored',
-        ]);
-    
-        $query = Order::query()->where('user_id', $user_id);
-    
-        if ($request->has('sortBy')) {
-
-            if ($attrs['sortBy'] !== 'urgent' && $attrs['sortBy'] !== 'stored') {
-                $query->where('state', $attrs['sortBy']);
-            } else {
-                $query->where('type', $attrs['sortBy']);
-            }
-        }
-    
-        $orders = $query->get();
-    
-        return response()->json([
-            'ordersOfUsers' => $orders,
-        ]);
-    }
 
     
 }
