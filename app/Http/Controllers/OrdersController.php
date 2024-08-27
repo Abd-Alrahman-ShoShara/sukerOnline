@@ -522,5 +522,29 @@ public function orderByStateForAdmin(Request $request)
     }
 
     return response()->json(['orders' => $sortedOrders]);
+
 }
+
+public function NormalOrders(Request $request){
+    $attrs = $request->validate([
+        'sortBy' => 'sometimes|in:newest,urgent,preparing,sent,received',
+    ]);
+
+    if ($request->has('sortBy')&& $attrs['sortBy'] != 'newest') {
+    $orders= Order::where([['type','regular'],['state',$attrs['sortBy']]])->get();
+    }else{
+        $orders = Order::where('type','regular')->get();
+    }
+    $orders=$orders->sortBy('created_at')->values();
+    if($orders->isEmpty()){
+
+        return response()->json([
+            'message'=>'threr is no Order',
+        ]);
+    }
+        return response()->json([
+            'reularOrders'=>$orders,
+        ]);
+    }
 }
+

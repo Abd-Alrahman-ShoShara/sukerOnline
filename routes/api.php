@@ -95,17 +95,15 @@ Route::post('/updateEssentialOrder/{order_id}', [OrdersController::class, 'updat
 Route::post('/updateExtraOrder/{order_id}', [OrdersController::class, 'updateExtraOrder']);
 
 Route::post('/createExtraOrder', [OrdersController::class, 'createExtraOrder'])->middleware('auth:api');
-
-
-Route::post('/preparingOrder/{order_id}', [OrdersController::class, 'preparingOrder']);
-Route::post('/sentOrder/{order_id}', [OrdersController::class, 'sentOrder']);
-Route::post('/receivedOrder/{order_id}', [OrdersController::class, 'receivedOrder']);
-
 Route::get('/ordersOfuser', [OrdersController::class, 'ordersOfuser'])->middleware('auth:api');
 
 Route::get('/storedOrdersOfuser', [OrdersController::class, 'storedOrdersOfuser'])->middleware('auth:api');
 Route::get('/notStoredOrdersOfuser', [OrdersController::class, 'notStoredOrdersOfuser'])->middleware('auth:api');
-
+////////////////////////////////////////////////////////////admin
+Route::post('/preparingOrder/{order_id}', [OrdersController::class, 'preparingOrder']);
+Route::post('/sentOrder/{order_id}', [OrdersController::class, 'sentOrder']);
+Route::post('/receivedOrder/{order_id}', [OrdersController::class, 'receivedOrder']);
+Route::post('/NormalOrders', [OrdersController::class, 'NormalOrders']);
 ////////////////////////////////////////////////////////////// PointsOrder ////////////////////
 
 Route::post('/createPointsOrder', [PointsOrderController::class, 'createPointsOrder'])->middleware('auth:api');
