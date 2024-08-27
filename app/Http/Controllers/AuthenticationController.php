@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -252,4 +253,49 @@ class AuthenticationController extends Controller
             'user'=> User::where('id',Auth::user()->id)->with('classification')->get(),
         ]);
     }
+
+    
+    public function allUsers(Request $request)
+{
+    $request->validate([
+        'sort' => 'required|boolean',
+    ]);
+
+    $userQuery = User::where('role', 1)->with('classification');
+
+    if ($request->sort) {
+        $userQuery = $userQuery->withCount('order')->orderBy('order_count', 'desc');
+    }
+
+    $users = $userQuery->get();
+
+    return response()->json([
+        'users' => $users
+    ]);
+}
+    public function userOrders(Request $request, $user_id)
+    {
+        $attrs = $request->validate([
+            'sortBy' => 'sometimes|in:pending,preparing,sent,received,urgent,stored',
+        ]);
+    
+        $query = Order::query()->where('user_id', $user_id);
+    
+        if ($request->has('sortBy')) {
+
+            if ($attrs['sortBy'] !== 'urgent' && $attrs['sortBy'] !== 'stored') {
+                $query->where('state', $attrs['sortBy']);
+            } else {
+                $query->where('type', $attrs['sortBy']);
+            }
+        }
+    
+        $orders = $query->get();
+    
+        return response()->json([
+            'ordersOfUsers' => $orders,
+        ]);
+    }
+
+    
 }

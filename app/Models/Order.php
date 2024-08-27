@@ -19,9 +19,12 @@ class Order extends Model
         'updated_at',
     ];
     public function users(){
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class,'user_id');
     }
     public function carts(){
         return $this->hasMany(Cart::class);
+    }
+    public function storedOrders(){
+        return $this->hasOne(StoredOrder::class,'order_id');
     }
 }

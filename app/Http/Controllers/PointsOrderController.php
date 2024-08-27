@@ -161,16 +161,22 @@ class PointsOrderController extends Controller
         {
         
             $attrs = $request->validate([
-                'sortBy' => 'sometimes|in:newest,urgent,preparing,sent,received',
+                'sortBy' => 'sometimes|in:pending,preparing,sent,received',
             ]);
         
-            if ($request->has('sortBy')&& $attrs['sortBy'] != 'newest') {
+            if ($request->has('sortBy')) {
             $pointsOrder = PointsOrder::where([['user_id', auth()->user()->id],['state',$attrs['sortBy']]])->get();
             }else{
                 $pointsOrder = PointsOrder::where([['user_id', auth()->user()->id]])->get();
             }
         
-            $pointsOrder=$pointsOrder->sortBy('created_at')->values();
+            $pointsOrder=$pointsOrder->sortByDesc('created_at')->values();
+
+            if($pointsOrder->isEmpty()){
+                return response()->json([
+                    'message'=>'threr is no Order',
+                ]);
+            }
         
             return response()->json([
                 'pointsOrder' => $pointsOrder

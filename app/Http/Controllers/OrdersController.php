@@ -127,10 +127,10 @@ class OrdersController extends Controller
 
 public function orderDetails($order_id)
 {
-    $order = Order::where('id', $order_id)->with('carts.product:id,name,price')->first();
+    $order = Order::where('id', $order_id)->with('carts.product:id,name,price','storedOrders')->first();
 
     return response()->json([
-        'carts' => $order ? $order->carts : [],
+        'orderDetails'=>$order,
     ], 200);
 }
 
@@ -304,26 +304,34 @@ public function updateExtraOrder(Request $request, $orderId)
 
     public function storedOrdersOfuser()
     {
+        $orders= Order::where([['user_id', auth()->user()->id],[
+            'type','stored'
+        ]])->with('storedOrders')->get();
+        $orders=$orders->sortByDesc('created_at')->values();
         return response([
-            'orders' => Order::where([['user_id', auth()->user()->id],[
-                'type','stored'
-            ]])->get()
+            'orders'=>$orders,
         ], 200);
     }
 
     public function notStoredOrdersOfuser(Request $request)
     {
         $attrs = $request->validate([
-            'sortBy' => 'sometimes|in:newest,pending,preparing,sent,received',
+            'sortBy' => 'sometimes|in:pending,preparing,sent,received',
         ]);
 
-        if ($request->has('sortBy')&& $attrs['sortBy'] != 'newest') {
+        if ($request->has('sortBy')) {
         $order = Order::where([['user_id', auth()->user()->id],['type','!=','stored'],['state',$attrs['sortBy']]])->get();
         }else{
             $order = Order::where([['user_id', auth()->user()->id],['type','!=','stored']])->get();
         }
 
-        $order=$order->sortBy('created_at')->values();
+        $order=$order->sortByDesc('created_at')->values();
+
+        if($order->isEmpty()){
+            return response()->json([
+                'message'=>'threr is no Order',
+            ]);
+        }
 
         return response([
             'orders' => $order
@@ -525,26 +533,40 @@ public function orderByStateForAdmin(Request $request)
 
 }
 
-public function NormalOrders(Request $request){
+public function allOrders(Request $request)
+{
     $attrs = $request->validate([
-        'sortBy' => 'sometimes|in:newest,pending,preparing,sent,received',
+        'type' => 'required|in:urgent,regular,stored',
+        'sortBy' => 'sometimes|in:pending,preparing,sent,received',
     ]);
 
-    if ($request->has('sortBy')&& $attrs['sortBy'] != 'newest') {
-    $orders= Order::where([['type','regular'],['state',$attrs['sortBy']]])->get();
-    }else{
-        $orders = Order::where('type','regular')->get();
-    }
-    $orders=$orders->sortBy('created_at')->values();
-    if($orders->isEmpty()){
+    $query = Order::query();
 
+    if ($request->has('type')) {
+        $query->where('type', $attrs['type']);
+    }
+
+    if ($request->has('sortBy')) {
+        $query->where('state', $attrs['sortBy']);
+    }
+
+    $orders = $query->with('users')
+                    ->orderByDesc('created_at')
+                    ->get();
+
+    if ($attrs['type'] == 'stored') {
+        $orders->load('storedOrders');
+    }
+
+    if ($orders->isEmpty()) {
         return response()->json([
-            'message'=>'threr is no Order',
+            'message' => 'There is no order.',
         ]);
     }
-        return response()->json([
-            'reularOrders'=>$orders,
-        ]);
-    }
+
+    return response()->json([
+        'Orders' => $orders,
+    ]);
+}
 }
 
