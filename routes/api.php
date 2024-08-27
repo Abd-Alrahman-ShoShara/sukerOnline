@@ -106,6 +106,7 @@ Route::post('/preparingOrder/{order_id}', [OrdersController::class, 'preparingOr
 Route::post('/sentOrder/{order_id}', [OrdersController::class, 'sentOrder']);
 Route::post('/receivedOrder/{order_id}', [OrdersController::class, 'receivedOrder']);
 Route::post('/allOrders', [OrdersController::class, 'allOrders']);
+Route::get('/allPointsOrders', [PointsOrderController::class, 'allPointsOrders']);
 ////////////////////////////////////////////////////////////// PointsOrder ////////////////////
 
 Route::post('/createPointsOrder', [PointsOrderController::class, 'createPointsOrder'])->middleware('auth:api');

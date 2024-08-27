@@ -234,6 +234,22 @@ public function receivedPointsOrder($pointsOrder_id)
     }
 }
     
+
+public function allPointsOrders()
+{
+    $pointsOrders = PointsOrder::all();
+
+    if ($pointsOrders->isNotEmpty()) {
+        return response()->json([
+            'thePointsOrders' => $pointsOrders
+        ], 200);
+    } else {
+        return response()->json([
+            'message' => 'ther is no orders'
+        ], 403);
+    }
+}
+    
     //     public function reportUserOrders(Request $request)
     //     {
     //         $request->validate([
