@@ -79,6 +79,7 @@ class OrdersController extends Controller
         $order->save();
 
         return response()->json([
+            'message'=>'created successfully',
             'theOrder' => $order,
 
         ]);
@@ -122,6 +123,7 @@ class OrdersController extends Controller
     $user->save();
 
     return response()->json([
+        'message'=>'created successfully',
         'theOrder' => $order,
     ]);
 }
