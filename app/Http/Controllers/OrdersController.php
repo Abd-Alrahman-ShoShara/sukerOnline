@@ -297,7 +297,87 @@ public function updateExtraOrder(Request $request, $orderId)
         'theOrder' => $order,
     ]);
 }
+public function updateOrder(Request $request, $orderId)
+{
+    $order = Order::find($orderId);
 
+    if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
+        return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
+    }
+
+    $request->validate([
+        'products.*' => 'required|array',
+        'type' => 'sometimes|in:urgent,regular,stored',
+        'storingTime' => 'required_if:type,stored|integer'
+    ]);
+
+    if ($request->has('type')) {
+        $order->type = $request->type;
+    }
+
+    $order->save();
+
+    $totalPrice = 0;
+    $AllQuantity = 0;
+    $PointsToAdd = 0;
+
+    Cart::where('order_id', $order->id)->delete();
+
+    foreach ($request->products as $product) {
+        Cart::create([
+            'order_id' => $order->id,
+            'product_id' => $product['product_id'],
+            'quantity' => $product['quantity'],
+        ]);
+
+        $theproduct = Product::find($product['product_id']);
+        $productPrice = $theproduct->price;
+        $totalPrice += $productPrice * $product['quantity'];
+        $AllQuantity += $product['quantity'];
+        $PointsToAdd += $theproduct->points * $product['quantity'];
+    }
+
+    $user = User::find($order->user_id);
+    if (!$user) {
+        return response()->json(['error' => 'User not found for this order.'], 404);
+    }
+
+    $user->userPoints -= $order->points;
+    $user->userPoints += $PointsToAdd;
+    $user->save();
+
+    $order->points = $PointsToAdd;
+
+    $AllPrice = 0;
+
+    if ($request->type == "stored") {
+        $configPath = config_path('staticPrice.json');
+        $config = json_decode(File::get($configPath), true);
+        $storePrice = $config['storePrice'];
+        $AllPrice = $storePrice * $request->storingTime * $AllQuantity;
+
+        StoredOrder::updateOrCreate(
+            ['order_id' => $order->id],
+            ['storingTime' => $request->storingTime]
+        );
+    } else {
+        StoredOrder::where('order_id', $order->id)->delete();
+    }
+
+    if ($request->type == "urgent") {
+        $configPath = config_path('staticPrice.json');
+        $config = json_decode(File::get($configPath), true);
+        $urgentPrice = $config['urgentPrice'];
+        $AllPrice = $urgentPrice * $AllQuantity;
+    }
+
+    $order->totalPrice = $totalPrice + $AllPrice;
+    $order->save();
+
+    return response()->json([
+        'theOrder' => $order,
+    ]);
+}
 
 public function editStateOfOrder(Request $request, $order_id)
 {

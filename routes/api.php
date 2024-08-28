@@ -94,6 +94,7 @@ Route::get('/orderDetails/{order_id}', [OrdersController::class, 'orderDetails']
 Route::delete('/deleteOrder/{order_id}', [OrdersController::class, 'deleteOrder']);
 Route::post('/updateEssentialOrder/{order_id}', [OrdersController::class, 'updateEssentialOrder']);
 Route::post('/updateExtraOrder/{order_id}', [OrdersController::class, 'updateExtraOrder']);
+Route::post('/updateOrder/{order_id}', [OrdersController::class, 'updateOrder']);
 
 Route::post('/createExtraOrder', [OrdersController::class, 'createExtraOrder'])->middleware('auth:api');
 Route::post('/allOrdersUser', [OrdersController::class, 'allOrdersUser'])->middleware('auth:api');
