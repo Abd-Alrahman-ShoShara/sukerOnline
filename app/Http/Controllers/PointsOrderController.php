@@ -180,7 +180,7 @@ class PointsOrderController extends Controller
         }
 
         return response()->json([
-            'pointsOrder' => $pointsOrder
+            'Orders' => $pointsOrder
         ], 200);
     }
 
