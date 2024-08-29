@@ -39,7 +39,6 @@ class PointsOrderController extends Controller
         if ($user->userPoints >= $totalPrice) {
             $pointsOrder = PointsOrder::create([
                 'user_id' => $user->id,
-                
                 'totalPrice' => $totalPrice,
             ]);
 
@@ -100,63 +99,137 @@ class PointsOrderController extends Controller
             'message' => 'The order was deleted successfully',
         ], 200);
     }
-
-    public function updatePointsOrder(Request $request, $pointsOrder_id)
+    public function updatePointsOrder(Request $request, $order_id)
     {
-        $pointsOrder = PointsOrder::find($pointsOrder_id);
-
-        if (!$pointsOrder || !in_array($pointsOrder->state, ['pending', 'preparing'])) {
-            return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
-        }
-
         $request->validate([
             'products.*' => 'required|array',
+            'products.*.pointsProduct_id' => 'required|exists:points_products,id',
+            'products.*.quantity' => 'required|integer|min:1',
         ]);
-
-        $user = User::find($pointsOrder->user_id);
-        if (!$user) {
-            return response()->json(['error' => 'User not found for this order.'], 404);
+    
+        $user = Auth::user();
+        $pointsOrder = PointsOrder::find($order_id);
+    
+        if (!$pointsOrder 
+            || $pointsOrder->user_id !== $user->id 
+            ||!in_array($pointsOrder->state, ['pending', 'preparing'])
+                ) {
+            return response()->json([
+                'message' => 'Order cannot be updated in its current state.',
+            ], 403);
         }
-        $totalPrice = 0;
-
-
-        PointsCart::where('pointsOrders_id', $pointsOrder_id)->delete();
-
+    
+     
+        $currentTotalPrice = $pointsOrder->pointCarts->sum(function ($cart) {
+            return $cart->pointsProduct->price * $cart->quantity;
+        });
+    
+        $newTotalPrice = 0;
+    
         foreach ($request->products as $product) {
             $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
+    
             if ($product['quantity'] > $pointsProduct->quantity) {
                 return response()->json([
                     'message' => 'The quantity of the product with ID ' . $pointsProduct->id . ' is not available.',
                 ], 400);
             }
+    
             $productPrice = $pointsProduct->price;
-            $totalPrice += $productPrice * $product['quantity'];
+            $newTotalPrice += $productPrice * $product['quantity'];
         }
-
-        $user->userPoints += $pointsOrder->totalPrice;
-        $user->save();
-
-        $pointsOrder->totalPrice = $totalPrice;
-        $pointsOrder->save();
-
+    
+        // Check if the user has enough points after updating
+        $pointsDifference = $newTotalPrice - $currentTotalPrice;
+    
+        if ($pointsDifference > 0 && $user->userPoints < $pointsDifference) {
+            return response()->json([
+                'message' => 'You do not have enough points to update this order.',
+            ], 400);
+        }
+    
+        // Update user points
+        if ($pointsDifference > 0) {
+            $user->userPoints -= $pointsDifference;
+            $user->save();
+        }
+    
+        // Update the order
+        // Clear existing carts
+        $pointsOrder->pointCarts()->delete();
+    
         foreach ($request->products as $product) {
             PointsCart::create([
-                'pointsOrders_id' => $pointsOrder_id,
+                'pointsOrders_id' => $pointsOrder->id,
                 'pointsProduct_id' => $product['pointsProduct_id'],
                 'quantity' => $product['quantity'],
             ]);
-
+    
             $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
             $pointsProduct->decrement('quantity', $product['quantity']);
         }
-
-        $user->userPoints -= $totalPrice;
-        $user->save();
-
+    
         return response()->json([
-            'theOrder' => $pointsOrder,
+            'message' => 'Order updated successfully',
+            'theOrder' => $pointsOrder->load('pointCarts'),
         ]);
     }
+    // public function updatePointsOrder(Request $request, $pointsOrder_id)
+    // {
+    //     $pointsOrder = PointsOrder::find($pointsOrder_id);
+
+    //     if (!$pointsOrder || !in_array($pointsOrder->state, ['pending', 'preparing'])) {
+    //         return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
+    //     }
+
+    //     $request->validate([
+    //         'products.*' => 'required|array',
+    //     ]);
+
+    //     $user = User::find($pointsOrder->user_id);
+    //     if (!$user) {
+    //         return response()->json(['error' => 'User not found for this order.'], 404);
+    //     }
+    //     $totalPrice = 0;
+
+
+    //     PointsCart::where('pointsOrders_id', $pointsOrder_id)->delete();
+
+    //     foreach ($request->products as $product) {
+    //         $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
+    //         if ($product['quantity'] > $pointsProduct->quantity) {
+    //             return response()->json([
+    //                 'message' => 'The quantity of the product with ID ' . $pointsProduct->id . ' is not available.',
+    //             ], 400);
+    //         }
+    //         $productPrice = $pointsProduct->price;
+    //         $totalPrice += $productPrice * $product['quantity'];
+    //     }
+
+    //     $user->userPoints += $pointsOrder->totalPrice;
+    //     $user->save();
+
+    //     $pointsOrder->totalPrice = $totalPrice;
+    //     $pointsOrder->save();
+
+    //     foreach ($request->products as $product) {
+    //         PointsCart::create([
+    //             'pointsOrders_id' => $pointsOrder_id,
+    //             'pointsProduct_id' => $product['pointsProduct_id'],
+    //             'quantity' => $product['quantity'],
+    //         ]);
+
+    //         $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
+    //         $pointsProduct->decrement('quantity', $product['quantity']);
+    //     }
+
+    //     $user->userPoints -= $totalPrice;
+    //     $user->save();
+
+    //     return response()->json([
+    //         'theOrder' => $pointsOrder,
+    //     ]);
+    // }
 
     public function pointsOrdersOfUser(Request $request)
     {
@@ -186,7 +259,7 @@ class PointsOrderController extends Controller
 
     public function allPointsOrders()
     {
-        $pointsOrders = PointsOrder::with('users.classification')->get();
+        $pointsOrders = PointsOrder::with('users.classification','pointCarts')->get();
 
         if ($pointsOrders->isNotEmpty()) {
             return response()->json([

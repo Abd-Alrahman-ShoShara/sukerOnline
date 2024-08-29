@@ -170,10 +170,13 @@ class ProductController extends Controller
                 'message' => 'There are no '.$type.' products',
             ], 404);
         }
-
+        $sukerProducts=$sukerProducts->map(function($sukerProducts){
+            $sukerProducts->images=json_decode($sukerProducts->images);
+        });
         return response()->json([
-            'the_'.$type.'_products' => $sukerProducts,
+            $sukerProducts,
         ], 200);
+
     }
 
     //////////////////////////////////////
