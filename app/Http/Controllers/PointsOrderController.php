@@ -39,6 +39,8 @@ class PointsOrderController extends Controller
         if ($user->userPoints >= $totalPrice) {
             $pointsOrder = PointsOrder::create([
                 'user_id' => $user->id,
+                
+                'totalPrice' => $totalPrice,
             ]);
 
             $user->userPoints -= $totalPrice;
@@ -61,7 +63,7 @@ class PointsOrderController extends Controller
             ]);
         } else {
             return response()->json([
-                'message' => 'Your points do not have enough.',
+                'message' => 'Your points does not enough.',
             ], 400);
         }
     }

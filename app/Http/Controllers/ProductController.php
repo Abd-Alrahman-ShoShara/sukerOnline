@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ClassificationProduct;
+use App\Models\PointsProduct;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -212,38 +213,35 @@ class ProductController extends Controller
 
     public function onOffProduct($product_id)
     {
-        $classificationProduct = ClassificationProduct::find($product_id);
-        $product=Product::find($product_id);
-        if($classificationProduct){
         
-            $classificationProduct->update([
-                'displayOrNot' => !$classificationProduct->displayOrNot,
-            ]);
-            return response()->json([
-                'afterUpdate' => $classificationProduct,
-            ]);
-                
-        }else{
+        $product=Product::find($product_id);
+        if($product){
+        
             $product->update([
                 'displayOrNot' => !$product->displayOrNot,
             ]);
             return response()->json([
                 'afterUpdate' => $product,
             ]);
+                
+        }else{
+            return response()->json([
+                'message' => 'there is no product',
+            ]);
         }
 
     }
 
     public function searchProduct($name){
-        $theCity= Product::where('name','like','%' . $name . '%')->get();
+        $theProduct= Product::where('name','like','%' . $name . '%')->get();
         return response()->json([
-            'the Cities :' => $theCity,
+            'theProduct :' => $theProduct,
         ]);
     }
     public function searchPoinstProduct($name){
-        $theCity= Product::where('name','like','%' . $name . '%')->get();
+        $theProduct= PointsProduct::where('name','like','%' . $name . '%')->get();
         return response()->json([
-            'the Cities :' => $theCity,
+            ' theProduct :' => $theProduct,
         ]);
     }
 }

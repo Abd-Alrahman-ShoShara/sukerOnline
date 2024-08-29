@@ -134,7 +134,7 @@ class PointsProductController extends Controller
     }
     public function PointsProducts()
     {
-        $PointsProducts = PointsProduct::all();
+        $PointsProducts = PointsProduct::where('displayOrNot',true)->get();
         $PointsProducts = $PointsProducts->map(function ($product) {
             $product->images = json_decode($product->images);
             return $product;

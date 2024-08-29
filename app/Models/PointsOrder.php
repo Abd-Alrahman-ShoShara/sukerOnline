@@ -10,7 +10,7 @@ class PointsOrder extends Model
     use HasFactory;
     protected $fillable =[
         'user_id',
-        'ReadOrNot',
+        
         'totalPrice',
         'state',
     ];
