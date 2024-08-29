@@ -572,7 +572,7 @@ public function allOrders(Request $request)
         $query->where('state', $attrs['sortBy']);
     }
 
-    $orders = $query->with('users')
+    $orders = $query->with('users.classification')
                     ->orderByDesc('created_at')
                     ->get();
 
