@@ -20,7 +20,7 @@ class PointsCart extends Model
 
 
     public function pointsProduct(){
-        return $this->belongsTo(PointsProduct::class);
+        return $this->belongsTo(PointsProduct::class,'pointsProduct_id');
     }
     public function pointsOrder(){
         return $this->belongsTo(pointsOrder::class);
