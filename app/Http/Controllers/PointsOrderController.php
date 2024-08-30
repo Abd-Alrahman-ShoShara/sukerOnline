@@ -302,7 +302,7 @@ class PointsOrderController extends Controller
 
     public function allPointsOrders()
     {
-        $pointsOrders = PointsOrder::with('users.classification','pointCarts')->get();
+        $pointsOrders = PointsOrder::with('users.classification','pointCarts.pointsProduct')->get();
 
         if ($pointsOrders->isNotEmpty()) {
             return response()->json([
