@@ -180,7 +180,7 @@ class ProductController extends Controller
     
   
         return response()->json([
-            'data' => $sukerProducts,
+            'the_product' => $sukerProducts,
         ], 200);
     }
     
