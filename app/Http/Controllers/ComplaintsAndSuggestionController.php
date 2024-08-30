@@ -32,6 +32,21 @@ class ComplaintsAndSuggestionController extends Controller
             'message' => 'Failed to create Complaint or Suggestion',
         ], 400);
     }
+    public function allComplaintsOrSuggestion(){
+       $cc=ComplaintsAndSuggestion::with('users')->get();
+       if($cc->isNotEmpty()){
+
+           return response([
+               'ComplaintsOrSuggestion' => $cc,
+           ], 200);    }
+           else{
+            return response([
+                'message' => 'the is no Complaints or Suggestion',
+            ], 200);
+           }
+       }
+
+
     public function ComplaintsOrSuggestionDetails($ComplaintsOrSuggestion_id){
         return response([
             'ComplaintsOrSuggestion' => ComplaintsAndSuggestion::where('id', $ComplaintsOrSuggestion_id)->with('users')->get(),

@@ -110,8 +110,8 @@ Route::get('/allPointsOrders', [PointsOrderController::class, 'allPointsOrders']
 Route::post('/createPointsOrder', [PointsOrderController::class, 'createPointsOrder'])->middleware('auth:api');
 Route::get('/pointsOrderDetails/{pointsOrder_id}', [PointsOrderController::class, 'pointsOrderDetails']);
 Route::delete('/deletePointsOrder/{pointsOrder_id}', [PointsOrderController::class, 'deletePointsOrder']);
-Route::post('/updatePointsOrder/{pointsOrder_id}', [PointsOrderController::class, 'updatePointsOrder']);
-Route::get('/pointsOrdersOfUser', [PointsOrderController::class, 'pointsOrdersOfUser'])->middleware('auth:api');
+Route::post('/updatePointsOrder/{pointsOrder_id}', [PointsOrderController::class, 'updatePointsOrder'])->middleware('auth:api');
+Route::post('/pointsOrdersOfUser', [PointsOrderController::class, 'pointsOrdersOfUser'])->middleware('auth:api');
 
 Route::post('/editStateOfPointsOrder/{PointsOrder_id}', [PointsOrderController::class, 'editStateOfPointsOrder']);
 
@@ -120,6 +120,7 @@ Route::post('/editStateOfPointsOrder/{PointsOrder_id}', [PointsOrderController::
 Route::post('/createComplaintsOrSuggestion', [ComplaintsAndSuggestionController::class, 'createComplaintsOrSuggestion'])->middleware('auth:api');
 Route::get('/ComplaintsOrSuggestionDetails/{ComplaintsOrSuggestion_id}', [ComplaintsAndSuggestionController::class, 'ComplaintsOrSuggestionDetails']);
 Route::get('/ComplaintsOrSuggestionUser', [ComplaintsAndSuggestionController::class, 'ComplaintsOrSuggestionUser'])->middleware('auth:api');
+Route::get('/allComplaintsOrSuggestion', [ComplaintsAndSuggestionController::class, 'allComplaintsOrSuggestion']);
 
 Route::post('/createRateAndReview', [RateAndReviewController::class, 'createRateAndReview'])->middleware('auth:api');
 Route::get('/RateAndReviewDetails/{RateAndReview_id}', [RateAndReviewController::class, 'RateAndReviewDetails']);

@@ -375,6 +375,7 @@ public function updateOrder(Request $request, $orderId)
     $order->save();
 
     return response()->json([
+        'message'=>'Order update successfully',
         'theOrder' => $order,
     ]);
 }
