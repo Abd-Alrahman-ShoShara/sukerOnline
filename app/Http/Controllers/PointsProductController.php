@@ -122,15 +122,20 @@ class PointsProductController extends Controller
 
     public function onOffPointsProduct($pointsProduct_id)
     {
-        $PointsProduct = PointsProduct::findOrFail($pointsProduct_id);
-
-        $PointsProduct->update([
-            'displayOrNot' => !$PointsProduct->displayOrNot,
-        ]);
-
-        return response()->json([
-            'afterUpdate' => $PointsProduct->fresh(),
-        ]);
+        $product = PointsProduct::find($pointsProduct_id);
+        if ($product) {
+            $product->displayOrNot = !$product->displayOrNot;
+            $product->save();
+            $state = $product->displayOrNot ? "the product is on" : "the product is off";
+            return response()->json([
+                'message' => $state,
+            ]);
+        } else {
+    
+            return response()->json([
+                'message' => 'there is no product',
+            ]);
+        }
     }
     public function PointsProducts()
     {
@@ -153,7 +158,7 @@ class PointsProductController extends Controller
         });
 
         return response()->json([
-            'product' => $PointsProducts,
+            'the_product' => $PointsProducts,
         ]);
     }
 

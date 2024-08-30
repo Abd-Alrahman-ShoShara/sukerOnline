@@ -222,27 +222,17 @@ class ProductController extends Controller
 
     public function onOffProduct($product_id)
     {
-        // Find the product
+  
         $product = Product::find($product_id);
-    
-        // If product exists, update its status
         if ($product) {
-            // Toggle the displayOrNot status
             $product->displayOrNot = !$product->displayOrNot;
-    
-            // Save the changes
             $product->save();
-    
-            // Create the response message based on the new status
             $state = $product->displayOrNot ? "the product is on" : "the product is off";
-    
-            // Return JSON response with the updated state
             return response()->json([
-                'afterUpdate' => $state,
-                'theProduct' => $product,
+                'message' => $state,
             ]);
         } else {
-            // If product doesn't exist, return error message
+    
             return response()->json([
                 'message' => 'there is no product',
             ]);
