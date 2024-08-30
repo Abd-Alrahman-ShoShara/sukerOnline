@@ -158,7 +158,7 @@ class PointsProductController extends Controller
         });
 
         return response()->json([
-            'product' => $PointsProducts,
+            'PointsProducts' => $PointsProducts,
         ]);
     }
 
