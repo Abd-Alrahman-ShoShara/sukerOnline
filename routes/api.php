@@ -59,6 +59,7 @@ Route::delete('/productsDelete/{id}', [ProductController::class, 'deleteProduct'
 Route::post('/AddPointsProduct',[PointsProductController::class,'AddPointsProduct']);
 Route::get('/PointsProductDetails/{id}', [PointsProductController::class, 'PointsProductDetails']);
 Route::get('/PointsProducts', [PointsProductController::class, 'PointsProducts']);
+Route::get('/PointsProductsAdmin', [PointsProductController::class, 'PointsProductsAdmin']);
 Route::post('/updatePointsProduct/{id}', [PointsProductController::class, 'updatePointsProduct']);
 Route::post('/onOffPointsProduct/{id}', [PointsProductController::class, 'onOffPointsProduct']);
 Route::delete('/deletePointsProduct/{id}', [PointsProductController::class, 'deletePointsProduct']);

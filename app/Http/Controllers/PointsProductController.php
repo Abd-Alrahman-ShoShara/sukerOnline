@@ -144,5 +144,17 @@ class PointsProductController extends Controller
             'PointsProducts' => $PointsProducts,
         ]);
     }
+    public function PointsProductsAdmin()
+    {
+        $PointsProducts = PointsProduct::all();
+        $PointsProducts = $PointsProducts->map(function ($product) {
+            $product->images = json_decode($product->images);
+            return $product;
+        });
+
+        return response()->json([
+            'PointsProducts' => $PointsProducts,
+        ]);
+    }
 
 }
