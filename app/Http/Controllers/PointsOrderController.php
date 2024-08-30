@@ -6,10 +6,13 @@ use App\Models\PointsCart;
 use App\Models\PointsOrder;
 use App\Models\PointsProduct;
 use App\Models\User;
+
+use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB as FacadesDB;
 
 class PointsOrderController extends Controller
 {
@@ -100,93 +103,99 @@ class PointsOrderController extends Controller
         ], 200);
     }
     public function updatePointsOrder(Request $request, $order_id)
-{
-    $request->validate([
-        'products.*' => 'required|array',
-        'products.*.pointsProduct_id' => 'required|exists:points_products,id',
-        'products.*.quantity' => 'required|integer|min:1',
-    ]);
 
-    $user = Auth::user();
-    $pointsOrder = PointsOrder::find($order_id);
-
-    if (!$pointsOrder || $pointsOrder->user_id !== $user->id || !in_array($pointsOrder->state, ['pending', 'preparing'])) {
-        return response()->json([
-            'message' => 'Order cannot be updated in its current state.',
-        ], 403);
-    }
-
-    $currentTotalPrice = $pointsOrder->totalPrice;
-
-    $newTotalPrice = 0;
-    $existingProducts = $pointsOrder->pointCarts->keyBy('pointsProduct_id');
-
-    foreach ($request->products as $product) {
-        $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
-        $availableQuantity = $pointsProduct->quantity + ($existingProducts->get($product['pointsProduct_id'], (object) ['quantity' => 0])->quantity);
-
-        if ($product['quantity'] > $availableQuantity) {
-            return response()->json([
-                'message' => 'The quantity of the product with ID ' . $pointsProduct->id . ' is not available.',
-            ], 400);
-        }
-
-        $productPrice = $pointsProduct->price;
-        $newTotalPrice += $productPrice * $product['quantity'];
-
-        // Remove from existing products if updating the quantity
-        if ($existingProducts->has($product['pointsProduct_id'])) {
-            $existingProducts->forget($product['pointsProduct_id']);
-        }
-    }
-
-    // Return quantities for removed products
-    foreach ($existingProducts as $removedProduct) {
-        $pointsProduct = PointsProduct::find($removedProduct->pointsProduct_id);
-        $pointsProduct->increment('quantity', $removedProduct->quantity);
-    }
-
-    $pointsDifference = $newTotalPrice - $currentTotalPrice;
-
-    // Check if the user has enough points for the update
-    if ($pointsDifference > 0 && $user->userPoints < $pointsDifference) {
-        return response()->json([
-            'message' => 'You do not have enough points to update this order.',
-        ], 400);
-    }
-
-    // Adjust user points
-    if ($pointsDifference > 0) {
-        $user->userPoints -= $pointsDifference;
-    } else {
-        // If pointsDifference is negative, add back the difference
-        $user->userPoints += abs($pointsDifference);
-    }
-    $user->save();
-
-    // Update the order
-    $pointsOrder->pointCarts()->delete();
-
-    foreach ($request->products as $product) {
-        PointsCart::create([
-            'pointsOrders_id' => $pointsOrder->id,
-            'pointsProduct_id' => $product['pointsProduct_id'],
-            'quantity' => $product['quantity'],
+    {
+        $request->validate([
+            'products.*' => 'required|array',
+            'products.*.pointsProduct_id' => 'required|exists:points_products,id',
+            'products.*.quantity' => 'required|integer|min:1',
         ]);
-
-        $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
-        $pointsProduct->decrement('quantity', $product['quantity']);
+    
+        $user = Auth::user();
+        $pointsOrder = PointsOrder::find($order_id);
+    
+        if (!$pointsOrder || $pointsOrder->user_id !== $user->id || !in_array($pointsOrder->state, ['pending', 'preparing'])) {
+            return response()->json([
+                'message' => 'Order cannot be edited in its current state.',
+            ], 403);
+        }
+    
+        $existingProducts = $pointsOrder->pointCarts->keyBy('pointsProduct_id');
+        $orderHasChanged = false;
+        $newTotalPrice = 0;
+    
+        foreach ($request->products as $product) {
+            $productId = $product['pointsProduct_id'];
+            $requestedQuantity = $product['quantity'];
+    
+            $pointsProduct = PointsProduct::find($productId);
+            $productPrice = $pointsProduct->price;
+            $newTotalPrice += $productPrice * $requestedQuantity;
+    
+            // Check if there is any change in the order
+            if (!$existingProducts->has($productId) || $existingProducts[$productId]->quantity !== $requestedQuantity) {
+                $orderHasChanged = true;
+            }
+        }
+    
+        // If the order has not changed, no need to proceed
+        if (!$orderHasChanged && $newTotalPrice === $pointsOrder->totalPrice) {
+            return response()->json([
+                'message' => 'Order has not changed, no updates made.',
+            ]);
+        }
+    
+        FacadesDB::transaction(function () use ($request, $pointsOrder, $user, $existingProducts, $newTotalPrice) {
+            $currentTotalPrice = $pointsOrder->totalPrice;
+            $pointsDifference = $newTotalPrice - $currentTotalPrice;
+    
+            // Check if the user has enough points for the update
+            if ($pointsDifference > 0 && $user->userPoints < $pointsDifference) {
+                throw new \Exception('You do not have enough points to update this order.');
+            }
+    
+            // Adjust user points
+            $user->userPoints -= $pointsDifference;
+            $user->save();
+    
+            // Update the order
+            $pointsOrder->pointCarts()->delete();
+    
+            foreach ($request->products as $product) {
+                $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
+                $existingQuantity = $existingProducts->get($product['pointsProduct_id'], (object) ['quantity' => 0])->quantity;
+                $requestedQuantity = $product['quantity'];
+                $quantityDifference = $requestedQuantity - $existingQuantity;
+    
+                // If the new quantity is greater than the existing quantity, decrease stock
+                if ($quantityDifference > 0) {
+                    if ($pointsProduct->quantity < $quantityDifference) {
+                        throw new \Exception('The quantity of the product with ID ' . $pointsProduct->id . ' is not available.');
+                    }
+                    $pointsProduct->decrement('quantity', $quantityDifference);
+                } 
+                // If the new quantity is less than the existing quantity, increase stock
+                elseif ($quantityDifference < 0) {
+                    $pointsProduct->increment('quantity', abs($quantityDifference));
+                }
+    
+                PointsCart::create([
+                    'pointsOrders_id' => $pointsOrder->id,
+                    'pointsProduct_id' => $product['pointsProduct_id'],
+                    'quantity' => $requestedQuantity,
+                ]);
+            }
+    
+            // Update the total price of the order
+            $pointsOrder->totalPrice = $newTotalPrice;
+            $pointsOrder->save();
+        });
+    
+        return response()->json([
+            'message' => 'Order edited successfully',
+            'theOrder' => $pointsOrder->load('pointCarts'),
+        ]);
     }
-
-    // Update the total price of the order
-    $pointsOrder->totalPrice = $newTotalPrice;
-    $pointsOrder->save();
-
-    return response()->json([
-        'message' => 'Order updated successfully',
-        'theOrder' => $pointsOrder->load('pointCarts'),
-    ]);
-}
     // public function updatePointsOrder(Request $request, $pointsOrder_id)
     // {
     //     $pointsOrder = PointsOrder::find($pointsOrder_id);
