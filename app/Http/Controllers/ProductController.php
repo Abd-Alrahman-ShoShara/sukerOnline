@@ -216,7 +216,7 @@ class ProductController extends Controller
         });
 
         return response()->json([
-            'the_products' => $products,
+            'the_product' => $products,
         ], 200);
     }
 
