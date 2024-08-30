@@ -163,21 +163,28 @@ class ProductController extends Controller
 
     public function productsAdmin($type)
     {
-        $sukerProducts = Product::where('type',$type)->get();
-
+        // Find products of the specified type
+        $sukerProducts = Product::where('type', $type)->get();
+    
+        // If no products found, return 404 error
         if ($sukerProducts->isEmpty()) {
             return response()->json([
-                'message' => 'There are no '.$type.' products',
+                'message' => 'There are no ' . $type . ' products',
             ], 404);
         }
-        $sukerProducts=$sukerProducts->map(function($sukerProducts){
-            $sukerProducts->images=json_decode($sukerProducts->images);
+    
+        // Decode the images field for each product
+        $sukerProducts->transform(function ($sukerProduct) {
+            $sukerProduct->images = json_decode($sukerProduct->images);
+            return $sukerProduct;
         });
+    
+        // Return the products as a JSON response with status 200
         return response()->json([
-            $sukerProducts,
+            'data' => $sukerProducts,
         ], 200);
-
     }
+    
 
     //////////////////////////////////////
 
