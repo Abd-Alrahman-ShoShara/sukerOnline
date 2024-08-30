@@ -109,7 +109,7 @@ Route::get('/allPointsOrders', [PointsOrderController::class, 'allPointsOrders']
 
 Route::post('/createPointsOrder', [PointsOrderController::class, 'createPointsOrder'])->middleware('auth:api');
 Route::get('/pointsOrderDetails/{pointsOrder_id}', [PointsOrderController::class, 'pointsOrderDetails']);
-Route::delete('/deletePointsOrder/{pointsOrder_id}', [PointsOrderController::class, 'deletePointsOrder']);
+Route::delete('/deletePointsOrder/{pointsOrder_id}', [PointsOrderController::class, 'deletePointsOrder'])->middleware('auth:api');
 Route::post('/updatePointsOrder/{pointsOrder_id}', [PointsOrderController::class, 'updatePointsOrder'])->middleware('auth:api');
 Route::post('/pointsOrdersOfUser', [PointsOrderController::class, 'pointsOrdersOfUser'])->middleware('auth:api');
 

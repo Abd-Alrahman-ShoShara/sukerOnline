@@ -90,16 +90,37 @@ class PointsOrderController extends Controller
 
     public function deletePointsOrder($pointsOrder_id)
     {
+        // Find the order in a 'pending' state
         $pointsOrder = PointsOrder::where(['id' => $pointsOrder_id, 'state' => 'pending'])->first();
-
+    
         if (!$pointsOrder) {
             return response()->json([
-                'message' => 'You cannot remove the order',
+                'message' => 'You cannot remove the order. It may not exist or is not in a pending state.',
             ], 200);
         }
-        $pointsOrder->delete();
+    
+        DB::transaction(function () use ($pointsOrder) {
+            $user = $pointsOrder->user; // Assuming there's a relationship between PointsOrder and User
+            $user=Auth::user();
+            // Return the points to the user
+            $user->userPoints += $pointsOrder->totalPrice;
+            $user->save();
+    
+            // Restore the product quantities
+            foreach ($pointsOrder->pointCarts as $cartItem) {
+                $pointsProduct = PointsProduct::find($cartItem->pointsProduct_id);
+                if ($pointsProduct) {
+                    $pointsProduct->increment('quantity', $cartItem->quantity);
+                }
+            }
+    
+            // Delete the order and its associated cart items
+            $pointsOrder->pointCarts()->delete();
+            $pointsOrder->delete();
+        });
+    
         return response()->json([
-            'message' => 'The order was deleted successfully',
+            'message' => 'The order was deleted successfully, and your points and product quantities have been restored.',
         ], 200);
     }
     public function updatePointsOrder(Request $request, $order_id)
