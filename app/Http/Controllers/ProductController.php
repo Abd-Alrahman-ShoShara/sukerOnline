@@ -164,7 +164,7 @@ class ProductController extends Controller
     public function productsAdmin($type)
     {
   
-        $sukerProducts = Product::where('type', $type)->get();
+        $sukerProducts = Product::where('type', $type)->with('classification')->get();
 
         if ($sukerProducts->isEmpty()) {
             return response()->json([
