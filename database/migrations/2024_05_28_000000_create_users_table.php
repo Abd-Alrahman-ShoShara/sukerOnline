@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('phone');
             $table->string('password');
+            $table->string('fcm_token')->nullable();
             $table->string('role')->default('1');
             $table->string('verification_code')->nullable();
             $table->boolean('is_verified')->default(false);

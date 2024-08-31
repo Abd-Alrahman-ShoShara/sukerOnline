@@ -26,6 +26,8 @@ class User extends Authenticatable
         'nameOfStore',
         'userPoints',
         'adress',
+        'fcm_token',
+        
     ];
 
     /**
@@ -65,5 +67,9 @@ class User extends Authenticatable
     public function classification(){
         return $this->belongsTo(Classification::class,'classification_id');
     }
+    public function routeNotificationForFcm()
+{
+    return $this->fcm_token; 
+}
 
 }

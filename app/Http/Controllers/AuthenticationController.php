@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use UltraMsg\WhatsAppApi;
-
+use App\Notifications\FirebasePushNotification;
 class AuthenticationController extends Controller
 {
 
@@ -211,6 +211,10 @@ class AuthenticationController extends Controller
         } else {
             $user->type = 'user';
         }
+       $user->notify(new FirebasePushNotification('login', 'log in raghad'));
+    
+
+
 
         $token = $user->createToken('auth_token')->accessToken;
 
@@ -219,36 +223,7 @@ class AuthenticationController extends Controller
             'token' => $token
         ]);
     }
-    // public function loginForUser(Request $request)
-    // {
-    //     $request->validate([
-    //         'phone' => 'required',
-    //         'password' => 'required'
-    //     ]);
-
-    //     $user = User::where('phone', $request->phone)->first();
-
-    //     if ($user->role == '0') {
-    //         return response([
-    //             'message' => 'no accses'
-    //         ], 403);
-    //     }
-
-    //     if (!$user || !Hash::check($request->password, $user->password)) {
-    //         return response([
-    //             'message' => 'The provided credentials are incorrect'
-    //         ], 403);
-    //     }
-
-    //     $token = $user->createToken('auth_token')->accessToken;
-
-    //     return response([
-    //         'user' => $user,
-    //         'token' => $token
-    //     ]);
-    // }
-
-    public function userInfo(){
+      public function userInfo(){
         return response()->json([
             'user'=> User::where('id',Auth::user()->id)->with('classification')->get(),
         ]);
