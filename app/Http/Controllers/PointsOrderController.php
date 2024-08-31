@@ -6,10 +6,10 @@ use App\Models\PointsCart;
 use App\Models\PointsOrder;
 use App\Models\PointsProduct;
 use App\Models\User;
-
+use App\Notifications\FirebasePushNotification;
 use DB;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
+
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB as FacadesDB;
@@ -217,8 +217,7 @@ class PointsOrderController extends Controller
             'theOrder' => $pointsOrder->load('pointCarts'),
         ]);
     }
-    // public function updatePointsOrder(Request $request, $pointsOrder_id)
-    // {
+
     //     $pointsOrder = PointsOrder::find($pointsOrder_id);
 
     //     if (!$pointsOrder || !in_array($pointsOrder->state, ['pending', 'preparing'])) {
@@ -322,12 +321,15 @@ class PointsOrderController extends Controller
     ]);
 
     $order = PointsOrder::find($pointsOrder_id);
+    $user=User::find($order->user_id);
 
     if ($order) {
         switch ($request->input('state')) {
             case 'preparing':
                 if ($order->state == 'pending') {
                     $order->update(['state' => $request->input('state')]);
+                    $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['pointsOrder_id'=>$pointsOrder_id]));
+
                     return response()->json([
                         'message' => 'Order state updated successfully'
                     ]);
@@ -339,6 +341,8 @@ class PointsOrderController extends Controller
             case 'sent':
                 if ($order->state == 'preparing') {
                     $order->update(['state' => $request->input('state')]);
+                    $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['pointsOrder_id'=>$pointsOrder_id]));
+
                     return response()->json([
                         'message' => 'Order state updated successfully'
                     ]);
@@ -350,6 +354,8 @@ class PointsOrderController extends Controller
             case 'received':
                 if ($order->state == 'sent') {
                     $order->update(['state' => $request->input('state')]);
+                    $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['pointsOrder_id'=>$pointsOrder_id]));
+
                     return response()->json([
                         'message' => 'Order state updated successfully'
                     ]);

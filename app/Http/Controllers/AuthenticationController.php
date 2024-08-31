@@ -22,6 +22,7 @@ class AuthenticationController extends Controller
             'nameOfStore'=> 'required',
             'classification_id'=>'required',
             'adress'=> 'required',
+            'fcm_token'=> 'required',
         ]);
 
         $user = User::create([
@@ -31,7 +32,9 @@ class AuthenticationController extends Controller
             'adress' => $request->adress,
             'classification_id' => $request->classification_id,
             'nameOfStore' => $request->nameOfStore,
+            'fcm_token'=>$request['fcm_token'],
         ]);
+
 
         // $token = $user->createToken('auth_token')->accessToken;
 
@@ -54,6 +57,7 @@ class AuthenticationController extends Controller
     $request->validate([
         'user_id' => 'required|exists:users,id',
         'code' => 'required',
+       
     ]);
 
     $user = User::findOrFail($request->user_id);
@@ -68,6 +72,7 @@ class AuthenticationController extends Controller
             'token'=>$token,
         ],200);
     } else {
+
         return response([
             'message' => 'Invalid verification code.',
         ], 422);
@@ -114,36 +119,38 @@ class AuthenticationController extends Controller
             'user_id' => 'required|exists:users,id',
             'code' => 'required',
         ]);
-
+        
         $user = User::findOrFail($request->user_id);
-
+        
         if ($user->verification_code == $request->code) {
-
-            //  $token=$user->createToken('auth_token')->accessToken;
-
+            
+            
+            
             return response([
                 'message' => 'Verification successful. enter the new password.',
-
+                
             ],200);
         } else {
             return response([
                 'message' => 'Invalid verification code.',
             ], 422);
         }
-
+        
     }
-
+    
     /////////////////////////////////////////////////////
     public function resatPassword(Request $request){
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'password'=>'required|min:6|confirmed',
+            'fcm_token' => 'required',
         ]);
          $user = User::findOrFail($request->user_id);
          $user-> update(['password' => Hash::make($request['password'])]);
 
         $token=$user->createToken('auth_token')->accessToken;
-
+        $user->fcm_token=$request['fcm_token'];
+        $user->save();
          return response()->json([
         'message'=> 'the password is updated',
         'token'=>$token,
@@ -188,14 +195,16 @@ class AuthenticationController extends Controller
         $client->sendChatMessage($to, $body);
         // return $this->success(null, 'we send the code');
     }
+  
     /////////////////////////////////////
 
     /////////////////////////////////////////
     public function login(Request $request)
     {
         $request->validate([
-            'phone' => 'required',
-            'password' => 'required'
+            'phone' => 'required|regex:/^[0-9]+$/',
+            'password' => 'required|min:6',
+            'fcm_token' => 'required'
         ]);
 
         $user = User::where('phone', $request->phone)->first();
@@ -211,12 +220,16 @@ class AuthenticationController extends Controller
         } else {
             $user->type = 'user';
         }
-       $user->notify(new FirebasePushNotification('login', 'log in raghad'));
+        $user->fcm_token=$request['fcm_token'];
+        $user->save();
+
     
+        // $user->notify(new FirebasePushNotification('Order', 'your order is '));
 
 
 
         $token = $user->createToken('auth_token')->accessToken;
+
 
         return response([
             'user' => $user,

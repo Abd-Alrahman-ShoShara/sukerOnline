@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\PointsProduct;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
-
+use App\Notifications\FirebasePushNotification;
 class PointsProductController extends Controller
 {
     public function AddPointsProduct(Request $request)
@@ -126,6 +127,12 @@ class PointsProductController extends Controller
         if ($product) {
             $product->displayOrNot = !$product->displayOrNot;
             $product->save();
+            if($product->displayOrNot){
+                $users=User::where('role','1')->get();
+                foreach($users as $user){
+                    $user->notify(new FirebasePushNotification('Product', 'ther is a new Point Product'));
+                }
+            }
             $state = $product->displayOrNot ? "the product is on" : "the product is off";
             return response()->json([
                 'message' => $state,

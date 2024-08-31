@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
+use App\Notifications\FirebasePushNotification;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\StoredOrder;
@@ -68,6 +69,9 @@ class OrdersController extends Controller
         }
 
         if ($request->type == "urgent") {
+            $user=User::where('role','0')->first();
+            $user->notify(new FirebasePushNotification('Order', 'there is a urgent order',['order_id'=>$order->id]));
+
             $configPath = config_path('staticPrice.json');
             $config = json_decode(File::get($configPath), true);
             $urgentPrice = $config['urgentPrice'];
@@ -84,9 +88,6 @@ class OrdersController extends Controller
 
         ]);
     }
-
-
-
 
     public function createExtraOrder(Request $request)
 {
@@ -387,12 +388,13 @@ public function editStateOfOrder(Request $request, $order_id)
     ]);
 
     $order = Order::find($order_id);
-
+    $user=User::find($order->user_id);
     if ($order) {
         switch ($request->input('state')) {
             case 'preparing':
                 if ($order->state == 'pending') {
                     $order->update(['state' => $request->input('state')]);
+                    $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['order_id'=>$order_id]));
                     return response()->json([
                         'message' => 'Order state updated successfully'
                     ]);
@@ -404,6 +406,7 @@ public function editStateOfOrder(Request $request, $order_id)
             case 'sent':
                 if ($order->state == 'preparing') {
                     $order->update(['state' => $request->input('state')]);
+                    $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['order_id'=>$order_id]));
                     return response()->json([
                         'message' => 'Order state updated successfully'
                     ]);
@@ -415,6 +418,7 @@ public function editStateOfOrder(Request $request, $order_id)
             case 'received':
                 if ($order->state == 'sent') {
                     $order->update(['state' => $request->input('state')]);
+                    $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['order_id'=>$order_id]));
                     return response()->json([
                         'message' => 'Order state updated successfully'
                     ]);
