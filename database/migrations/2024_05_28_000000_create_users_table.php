@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('fcm_token')->nullable();
             $table->string('role')->default('1');
-            $table->enum('language',['en','ar'])->default('en');
+            $table->enum('language',['en','ar'])->default('ar');
             $table->string('verification_code')->nullable();
             $table->boolean('is_verified')->default(false);
             $table->string('nameOfStore')->nullable();
