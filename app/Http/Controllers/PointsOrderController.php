@@ -311,7 +311,7 @@ class PointsOrderController extends Controller
         } else {
             return response()->json([
                 'message' => 'لا يوجد طلبات'
-            ], 403);
+            ]);
         }
     }
 

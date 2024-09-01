@@ -262,7 +262,7 @@ public function choseLanguage(Request $request) {
     $user->save();
 
     return response()->json([
-        'theUser' => $user,
-    ]);
+        'message' => 'تم تعديل لغة التطبيق بنجاح',
+    ],200);
 }    
 }
