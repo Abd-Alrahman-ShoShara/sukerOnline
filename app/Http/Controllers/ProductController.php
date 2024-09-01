@@ -204,12 +204,6 @@ class ProductController extends Controller
             ->get();
 
 
-        if ($products->isEmpty()) {
-            return response()->json([
-                'message' => 'There are no '. $type .' products that are set to display for your classification',
-            ], 404);
-        }
-
         $products = $products->map(function ($product) {
             $product->images = json_decode($product->images);
             return $product;
