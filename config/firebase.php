@@ -50,9 +50,8 @@ return [
              *
              */
 
-          'credentials' => [
-        'file' => env('FIREBASE_CREDENTIALS'),
-    ],
+            
+            
 
             /*
              * ------------------------------------------------------------------------
@@ -188,6 +187,7 @@ return [
                 'http_log_channel' => env('FIREBASE_HTTP_LOG_CHANNEL'),
                 'http_debug_log_channel' => env('FIREBASE_HTTP_DEBUG_LOG_CHANNEL'),
             ],
+
 
             /*
              * ------------------------------------------------------------------------

@@ -167,7 +167,7 @@ class AttributeController extends Controller
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
     
         return response()->json([
-            'message' => $config['isActive'] ? 'التطبيق قسد العمل ' : 'التطبيق في حالة صيانة',
+            'message' => $config['isActive'] ? 'التطبيق قيد العمل ' : 'التطبيق في حالة صيانة',
         ],200);
     }
 }
