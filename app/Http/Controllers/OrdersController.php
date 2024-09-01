@@ -73,7 +73,7 @@ class OrdersController extends Controller
             $user1=User::where('role','0')->first();
             
             $notificationController = new NotificationController(new FirebaseService()); 
-            $notificationController->sendPushNotification($user1->fcm_token,'طلب جديد', 'لديك طلبية مستعجلة',['order_id'=>$order->id]);
+            $notificationController->sendPushNotification($user1->fcm_token,'طلب جديد', 'لديك طلبية مستعجلة',['urgent'=>$order->id]);
 
             $configPath = config_path('staticPrice.json');
             $config = json_decode(File::get($configPath), true);
