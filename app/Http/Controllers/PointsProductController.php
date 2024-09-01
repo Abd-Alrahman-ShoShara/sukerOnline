@@ -133,7 +133,7 @@ class PointsProductController extends Controller
                 $users=User::where([['role','1'],['is_verified',true]])->get();
                 foreach($users as $user){
                     $notificationController = new NotificationController(new FirebaseService()); 
-                    $notificationController->sendPushNotification($user->fcm_token,'Product', 'ther is a new Point Product',['pointsProduct_id'=>$pointsProduct_id]); 
+                    $notificationController->sendPushNotification($user->fcm_token,'Product', 'ther is a new Point Product',['NewpointsProduct_id'=>$pointsProduct_id]); 
                 }
             }
             $state = $product->displayOrNot ? "تم عرض المنتج" : "تم ايقاف عرض المنتج";
