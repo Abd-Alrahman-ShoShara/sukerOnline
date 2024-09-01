@@ -255,5 +255,17 @@ class AuthenticationController extends Controller
     ]);
 }
 
-    
+public function choseLanguage(Request $request) {
+    $request->validate([
+        'language' => 'required|in:en,ar',
+    ]);
+
+    $user = Auth::user();
+    $user->language = $request->language;
+    $user->save();
+
+    return response()->json([
+        'theUser' => $user,
+    ]);
+}    
 }

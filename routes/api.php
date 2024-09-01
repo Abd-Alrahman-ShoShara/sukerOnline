@@ -139,6 +139,8 @@ Route::post('/orderByStateForAdmin', [OrdersController::class, 'orderByStateForA
 /////////////////////////////////////////////////////////////////////maintenance
 Route::post('/AppOnOff', [AttributeController::class, 'AppOnOff']);
 
+Route::post('/choseLanguage',[AuthenticationController::class,'choseLanguage'])->middleware('auth:api');
+
 Route::middleware(['OnOffApp'])->group(function () {
     
 });
