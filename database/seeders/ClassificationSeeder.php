@@ -14,19 +14,19 @@ class ClassificationSeeder extends Seeder
     public function run(): void
     {
         Classification::create([
-            'name'=>'hotel'
+            'name'=>'فندق'
         ]);
     
         Classification::create([
-            'name'=>'cinema'
+            'name'=>'سينما'
         ]);
     
         Classification::create([
-            'name'=>'restraunt'
+            'name'=>'مطعم'
         ]);
     
         Classification::create([
-            'name'=>'super market'
+            'name'=>'سوبر ماركت'
         ]);
     }
 }
