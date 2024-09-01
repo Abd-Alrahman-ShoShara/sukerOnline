@@ -133,14 +133,14 @@ class PointsProductController extends Controller
                     $user->notify(new FirebasePushNotification('Product', 'ther is a new Point Product'));
                 }
             }
-            $state = $product->displayOrNot ? "the product is on" : "the product is off";
+            $state = $product->displayOrNot ? "تم عرض المنتج" : "تم ايقاف عرض المنتج";
             return response()->json([
                 'message' => $state,
             ]);
         } else {
     
             return response()->json([
-                'message' => 'there is no product',
+                'message' => 'لايوجد منتج',
             ]);
         }
     }

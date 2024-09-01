@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Classification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class ClassificationController extends Controller
 {
@@ -20,12 +22,21 @@ class ClassificationController extends Controller
             ],422);
         }
         return response()->json([
-            'message'=>'the classification created successfully',
+            'message'=>'تم اضافة تصنيف بنجاح',
             'classification'=>$classicification
         ],200);
     }
     public function allClassifications(){
         $classicifications= Classification::all();
+        // $tr=new GoogleTranslate();
+        // foreach($classicifications as $classicification){
+
+        //     $name=$tr->setTarget('ar')->translate($classicification->name);
+        //     $translatedClassifications[] = [
+        //         'id' => $classicification->id,
+        //         'name' => $name,
+        //     ];
+        // }
         return response()->json([
             'classification'=>$classicifications,
         ],200);
@@ -35,6 +46,6 @@ class ClassificationController extends Controller
     {
         $classification = Classification::findOrFail($classification_id);
         $classification->delete();
-        return response()->json(['message' => 'Product deleted successfully'],200);
+        return response()->json(['message' => 'تم جذف التصنيف بنجاح'],200);
     }
 }

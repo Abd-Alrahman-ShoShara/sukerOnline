@@ -45,10 +45,10 @@ class AuthenticationController extends Controller
         $this->sendCode($user['phone'], $code,$user['name']);
 
         return response([
-            'message' => 'User registered successfully. Please enter the verification code.',
+            'message' => 'تم التسجيل بنجاح , الرجاء ادخال كود التأكيد',
             'user_id' => $user->id,
 
-        ]);
+        ],200);
     }
     /////////////////////////////////////////////////////////////////////
     function verifyCode(Request $request)
@@ -68,13 +68,13 @@ class AuthenticationController extends Controller
         $user->save();
          $token=$user->createToken('auth_token')->accessToken;
         return response([
-            'message' => 'Verification successful. User is now verified.',
+            'message' => 'تم التأكيد بنجاح',
             'token'=>$token,
         ],200);
     } else {
 
         return response([
-            'message' => 'Invalid verification code.',
+            'message' => 'الكود الذي ادخلته خاطئ الرجاء المحاولة مجدداً',
         ], 422);
     }
 
@@ -84,7 +84,7 @@ class AuthenticationController extends Controller
     public function logout(){
         User::find(Auth::id())->tokens()->delete();
         return response([
-            'message'=>'Logged out sucesfully'
+            'message'=>'تم تسجيل الخروج'
         ]);
     }
     //////////////////////////////////////
@@ -96,7 +96,7 @@ class AuthenticationController extends Controller
         $user=User::where('phone',$request->phone)->first();
         if(!$user){
             return response()->json([
-                'message'=>'the phone number is wrong'
+                'message'=>'رقم الموبايل الذي ادخلته خاطئ'
             ]);
         }
         $code = mt_rand(1000, 9999);
@@ -106,10 +106,10 @@ class AuthenticationController extends Controller
         $this->sendCode($user['phone'], $code,$user['name']);
 
         return response([
-            'message' => 'The code was sent. Please enter it to verification.',
+            'message' => 'لقد ارسلنا كود تأكيد الى رقمك قم بادخاله ',
             'user_id' => $user->id,
 
-        ]);
+        ],200);
 
     }
     ///////////////////////////////////////////////////
@@ -127,12 +127,12 @@ class AuthenticationController extends Controller
             
             
             return response([
-                'message' => 'Verification successful. enter the new password.',
+                'message' => 'تم التأكيد , ادخل كلمة السر الجديدة.',
                 
             ],200);
         } else {
             return response([
-                'message' => 'Invalid verification code.',
+                'message' => 'الكود الذي قمت بادخاله خاطئ',
             ], 422);
         }
         
@@ -152,7 +152,7 @@ class AuthenticationController extends Controller
         $user->fcm_token=$request['fcm_token'];
         $user->save();
          return response()->json([
-        'message'=> 'the password is updated',
+        'message'=> 'تم تعديل كلمة السر',
         'token'=>$token,
          ]);
 
@@ -170,11 +170,11 @@ class AuthenticationController extends Controller
 
         auth()->user()->update(['password' => Hash::make($request['NewPassword'])]);
         return response()->json([
-            'message' => 'The password has been updated.',
+            'message' => 'تم تعديل كلمة السر.',
         ]);
         } else {
         return response()->json([
-            'message' => 'The old password is incorrect.',
+            'message' => 'كلمة السر القديمة خاطئة',
         ]);
         }
     }
@@ -198,40 +198,33 @@ class AuthenticationController extends Controller
   
     /////////////////////////////////////
 
-    /////////////////////////////////////////
-    public function login(Request $request)
-    {
+
+    public function login(Request $request){
         $request->validate([
             'phone' => 'required|regex:/^[0-9]+$/',
             'password' => 'required|min:6',
             'fcm_token' => 'required'
         ]);
-
+    
         $user = User::where('phone', $request->phone)->first();
-
+    
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response([
-                'message' => 'The provided credentials are incorrect'
+                'message' => 'المعلومات المدخلة خاطئة,الرجاء اعادة المحاولة'
             ], 403);
         }
-
-        if ($user->role == '0') {
-            $user->type = 'admin';
-        } else {
-            $user->type = 'user';
-        }
-        $user->fcm_token=$request['fcm_token'];
+        $user->fcm_token = $request->fcm_token; 
         $user->save();
 
+        $user->type = $user->role == 0 ? 'admin' : 'user';
     
-        // $user->notify(new FirebasePushNotification('Order', 'your order is '));
-
-
-
         $token = $user->createToken('auth_token')->accessToken;
-
-
-        return response([
+    
+        // Optionally send a notification (replace with your actual notification logic)
+        // if ($user->role == 0) { // Only for admins
+        //     $user->notify(new FirebasePushNotification('Login', 'Admin login successful'));
+        // }
+        return response()->json([
             'user' => $user,
             'token' => $token
         ]);

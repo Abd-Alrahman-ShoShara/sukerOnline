@@ -70,7 +70,7 @@ class OrdersController extends Controller
 
         if ($request->type == "urgent") {
             $user=User::where('role','0')->first();
-            $user->notify(new FirebasePushNotification('Order', 'there is a urgent order',['order_id'=>$order->id]));
+            $user->notify(new FirebasePushNotification('Order', 'لديك طلبية مستعجلة',['order_id'=>$order->id]));
 
             $configPath = config_path('staticPrice.json');
             $config = json_decode(File::get($configPath), true);
@@ -83,7 +83,7 @@ class OrdersController extends Controller
         $order->save();
 
         return response()->json([
-            'message'=>'created successfully',
+            'message'=>'تم انشاء طلب بنجاح',
             'theOrder' => $order,
 
         ]);
@@ -124,7 +124,7 @@ class OrdersController extends Controller
     $user->save();
 
     return response()->json([
-        'message'=>'created successfully',
+        'message'=>'تم انشاء طلب بنجاح',
         'theOrder' => $order,
     ]);
 }
@@ -144,15 +144,9 @@ public function deleteOrder($order_id)
 
     if (!$order) {
         return response()->json([
-            'message' => 'You cannot remove the order',
+            'message' => 'لا يمكنك الغاء الطلب',
         ], 403);
     }
-    $user = User::find($order->user_id);
-    if (!$user) {
-        return response()->json(['error' => 'User not found for this order.'], 404);
-    }
-
-    // Deduct points from the user
     $user = User::find($order->user_id);
     if (!$user) {
         return response()->json(['error' => 'User not found for this order.'], 404);
@@ -163,7 +157,7 @@ public function deleteOrder($order_id)
     $order->delete();
 
     return response()->json([
-        'message' => 'The order was deleted successfully',
+        'message' => 'تم الغاء الطلب بنجاح ',
     ], 200);
 }
 
@@ -172,7 +166,7 @@ public function updateEssentialOrder(Request $request, $orderId)
     $order = Order::find($orderId);
 
     if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
-        return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
+        return response()->json(['error' => 'لا يمكنك تعديل الطلب '], 403);
     }
 
     $request->validate([
@@ -255,7 +249,7 @@ public function updateExtraOrder(Request $request, $orderId)
     $order = Order::find($orderId);
 
     if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
-        return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
+        return response()->json(['error' => 'لايمكنك تعديل الطلب'], 403);
     }
 
     $request->validate([
@@ -303,7 +297,7 @@ public function updateOrder(Request $request, $orderId)
     $order = Order::find($orderId);
 
     if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
-        return response()->json(['error' => 'Order cannot be updated in its current state.'], 403);
+        return response()->json(['error' => 'لا يمكنك تعديل الطلب'], 403);
     }
 
     $request->validate([
@@ -376,7 +370,7 @@ public function updateOrder(Request $request, $orderId)
     $order->save();
 
     return response()->json([
-        'message'=>'Order update successfully',
+        'message'=>'تم تعديل الطلب بنجاح',
         'theOrder' => $order,
     ]);
 }
@@ -394,37 +388,37 @@ public function editStateOfOrder(Request $request, $order_id)
             case 'preparing':
                 if ($order->state == 'pending') {
                     $order->update(['state' => $request->input('state')]);
-                    $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['order_id'=>$order_id]));
+                    $user->notify(new FirebasePushNotification('Order', 'طلبك '.$request->input('state'),['order_id'=>$order_id]));
                     return response()->json([
-                        'message' => 'Order state updated successfully'
+                        'message' => 'تم تعديل حالة الطلب'
                     ]);
                 } else {
                     return response()->json([
-                        'message' => 'Order is not in the pending state'
+                        'message' => 'الطلب ليس قيد الانتظار'
                     ], 403);
                 }
             case 'sent':
                 if ($order->state == 'preparing') {
                     $order->update(['state' => $request->input('state')]);
-                    $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['order_id'=>$order_id]));
+                    $user->notify(new FirebasePushNotification('Order', 'طلبك '.$request->input('state'),['order_id'=>$order_id]));
                     return response()->json([
-                        'message' => 'Order state updated successfully'
+                        'message' => 'تم تعديل حالة الطلب'
                     ]);
                 } else {
                     return response()->json([
-                        'message' => 'Order is not in the preparing state'
+                        'message' => 'الطلب ليس قيد التحضير'
                     ], 403);
                 }
             case 'received':
                 if ($order->state == 'sent') {
                     $order->update(['state' => $request->input('state')]);
-                    $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['order_id'=>$order_id]));
+                    $user->notify(new FirebasePushNotification('Order', 'طلبك '.$request->input('state'),['order_id'=>$order_id]));
                     return response()->json([
-                        'message' => 'Order state updated successfully'
+                        'message' => 'تم تعديل حالة الطلب'
                     ]);
                 } else {
                     return response()->json([
-                        'message' => 'Order is not in the sent state'
+                        'message' => 'الطلب ليس قيد الارسال'
                     ], 403);
                 }
             default:
@@ -434,7 +428,7 @@ public function editStateOfOrder(Request $request, $order_id)
         }
     } else {
         return response()->json([
-            'message' => 'Order not found'
+            'message' => 'الطلب غير موجود'
         ], 404);
     }
 }
@@ -465,7 +459,7 @@ public function editStateOfOrder(Request $request, $order_id)
         }
 
         if ($orders->isEmpty()) {
-            return response()->json(['message' => 'No orders found for the specified date or date range.']);
+            return response()->json(['message' => 'لا يوجد طلبات في التاريخ المحدد']);
         }
 
         $report = $orders->map(function ($order) {
@@ -510,7 +504,7 @@ public function editStateOfOrder(Request $request, $order_id)
     ])->get();
 
     if ($orders->isEmpty()) {
-        return response()->json(['message' => 'No orders found in the specified date range.']);
+        return response()->json(['message' => 'لا يوجد طلبات في التاريخ المحدد']);
     }
 
     $report = $orders->map(function ($order) {
@@ -587,7 +581,7 @@ public function allOrders(Request $request)
 
     if ($orders->isEmpty()) {
         return response()->json([
-            'message' => 'There is no order.',
+            'message' => 'لا يوجد طلبات ',
         ]);
     }
 
@@ -622,7 +616,7 @@ public function allOrdersUser(Request $request)
 
     if ($orders->isEmpty()) {
         return response()->json([
-            'message' => 'There is no order.',
+            'message' => 'لا يوجد طلبات',
         ]);
     }
 

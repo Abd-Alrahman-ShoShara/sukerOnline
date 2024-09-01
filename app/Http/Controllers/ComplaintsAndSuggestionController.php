@@ -14,6 +14,7 @@ class ComplaintsAndSuggestionController extends Controller
             "type" => "required|in:complaints,suggestions",
             "body" => "required|string",
         ]);
+        $com=$request->type=='complaints'? 'شكوى' : "اقتراح";
 
         $done = ComplaintsAndSuggestion::create([
             'user_id' => Auth::user()->id,
@@ -23,13 +24,13 @@ class ComplaintsAndSuggestionController extends Controller
 
         if ($done) {
             return response()->json([
-                'message' => 'Complaint or Suggestion created successfully',
+                'message' => 'تم انشاء '.$com. ' بنجاح',
                 'data' => $done,
-            ], 201);
+            ], 200);
         }
 
         return response()->json([
-            'message' => 'Failed to create Complaint or Suggestion',
+            'message' => 'فشل انشاء '.$com,
         ], 400);
     }
     public function allComplaintsOrSuggestion(){
@@ -41,7 +42,7 @@ class ComplaintsAndSuggestionController extends Controller
            ], 200);    }
            else{
             return response([
-                'message' => 'the is no Complaints or Suggestion',
+                'message' => 'لا يوجد شكاوي او اقتراحات ',
             ], 200);
            }
        }
@@ -50,17 +51,19 @@ class ComplaintsAndSuggestionController extends Controller
     public function ComplaintsOrSuggestionDetails($ComplaintsOrSuggestion_id){
         return response([
             'ComplaintsOrSuggestion' => ComplaintsAndSuggestion::where('id', $ComplaintsOrSuggestion_id)->with('users')->get(),
-        ], 200);    }
+        ], 200);
+        }
 
     public function ComplaintsOrSuggestionUser(){
         $ComplaintsOrSuggestion=ComplaintsAndSuggestion::where('user_id',Auth::user()->id )->with('users')->get();
         if($ComplaintsOrSuggestion->isEmpty()){
 
             return response([
-                'messagw'=>'there is no Complaints Or Suggestion',
+                'message'=>'لا يوجد شكاوي او اقتراحات',
             ], 200);    }
 
         return response([
             'ComplaintsOrSuggestion'=>$ComplaintsOrSuggestion,
-        ], 200);    }
+        ], 200);  
+      }
 }

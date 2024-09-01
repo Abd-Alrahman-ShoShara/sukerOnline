@@ -32,7 +32,7 @@ class PointsOrderController extends Controller
             $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
             if ($product['quantity'] > $pointsProduct->quantity) {
                 return response()->json([
-                    'message' => ' The quantity of the product with ID ' . $pointsProduct->id . ' is not available.',
+                    'message' => 'كمية المنتج المطلوب غير متاحة',
                 ], 400);
             }
             $productPrice = $pointsProduct->price;
@@ -60,12 +60,12 @@ class PointsOrderController extends Controller
             }
 
             return response()->json([
-                'message' => 'created successfully',
+                'message' => 'تم انشاء الطلب بنجاح',
                 'theOrder' => $pointsOrder->load('pointCarts'),
             ]);
         } else {
             return response()->json([
-                'message' => 'Your points does not enough.',
+                'message' => 'رصيدك من النقاط لايكفي لاتمام الطلب',
             ], 400);
         }
     }
@@ -79,7 +79,7 @@ class PointsOrderController extends Controller
 
         if (!$pointsOrder) {
             return response()->json([
-                'message' => 'There is no order to show',
+                'message' => 'لا يوجد طلب',
             ], 404);
         }
 
@@ -120,7 +120,7 @@ class PointsOrderController extends Controller
         });
     
         return response()->json([
-            'message' => 'The order was deleted successfully, and your points and product quantities have been restored.',
+            'message' => 'تم الغاء الطلب واسترجاع نقاطك',
         ], 200);
     }
     public function updatePointsOrder(Request $request, $order_id)
@@ -137,7 +137,7 @@ class PointsOrderController extends Controller
     
         if (!$pointsOrder || $pointsOrder->user_id !== $user->id || !in_array($pointsOrder->state, ['pending', 'preparing'])) {
             return response()->json([
-                'message' => 'Order cannot be edited in its current state.',
+                'message' => 'لا يمكن تعديل الطلبل',
             ], 403);
         }
     
@@ -162,7 +162,7 @@ class PointsOrderController extends Controller
         // If the order has not changed, no need to proceed
         if (!$orderHasChanged && $newTotalPrice === $pointsOrder->totalPrice) {
             return response()->json([
-                'message' => 'Order has not changed, no updates made.',
+                'message' => 'لم يتم تغيير معلومات الطلب',
             ]);
         }
     
@@ -172,7 +172,7 @@ class PointsOrderController extends Controller
     
             // Check if the user has enough points for the update
             if ($pointsDifference > 0 && $user->userPoints < $pointsDifference) {
-                throw new \Exception('You do not have enough points to update this order.');
+                throw new \Exception('رصيدك من النقاط لا يكفي للطلب الجديد ');
             }
     
             // Adjust user points
@@ -191,7 +191,7 @@ class PointsOrderController extends Controller
                 // If the new quantity is greater than the existing quantity, decrease stock
                 if ($quantityDifference > 0) {
                     if ($pointsProduct->quantity < $quantityDifference) {
-                        throw new \Exception('The quantity of the product with ID ' . $pointsProduct->id . ' is not available.');
+                        throw new \Exception('كمية المنتج المطلوب غير متاحة');
                     }
                     $pointsProduct->decrement('quantity', $quantityDifference);
                 } 
@@ -213,7 +213,7 @@ class PointsOrderController extends Controller
         });
     
         return response()->json([
-            'message' => 'Order edited successfully',
+            'message' => 'تم تعديل الطلب بنجاح',
             'theOrder' => $pointsOrder->load('pointCarts'),
         ]);
     }
@@ -290,7 +290,7 @@ class PointsOrderController extends Controller
 
         if ($pointsOrder->isEmpty()) {
             return response()->json([
-                'message' => 'threr is no Order',
+                'message' => 'لا يوجد طلبات',
             ]);
         }
 
@@ -309,7 +309,7 @@ class PointsOrderController extends Controller
             ], 200);
         } else {
             return response()->json([
-                'message' => 'ther is no orders'
+                'message' => 'لا يوجد طلبات'
             ], 403);
         }
     }
@@ -331,11 +331,11 @@ class PointsOrderController extends Controller
                     $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['pointsOrder_id'=>$pointsOrder_id]));
 
                     return response()->json([
-                        'message' => 'Order state updated successfully'
+                        'message' => 'تم تعديل حالة الطلب'
                     ]);
                 } else {
                     return response()->json([
-                        'message' => 'Order is not in the pending state'
+                        'message' => 'الطلب ليس قيد الانتظار'
                     ], 403);
                 }
             case 'sent':
@@ -344,11 +344,11 @@ class PointsOrderController extends Controller
                     $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['pointsOrder_id'=>$pointsOrder_id]));
 
                     return response()->json([
-                        'message' => 'Order state updated successfully'
+                        'message' => 'تم تعديل حالة الطلب'
                     ]);
                 } else {
                     return response()->json([
-                        'message' => 'Order is not in the preparing state'
+                        'message' => 'الطلب ليس قيد التحضير'
                     ], 403);
                 }
             case 'received':
@@ -357,11 +357,11 @@ class PointsOrderController extends Controller
                     $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['pointsOrder_id'=>$pointsOrder_id]));
 
                     return response()->json([
-                        'message' => 'Order state updated successfully'
+                        'message' => 'تم تعديل حالة الطلب'
                     ]);
                 } else {
                     return response()->json([
-                        'message' => 'Order is not in the sent state'
+                        'message' => 'الطلب ليس قيد الارسال'
                     ], 403);
                 }
             default:
@@ -371,7 +371,7 @@ class PointsOrderController extends Controller
         }
     } else {
         return response()->json([
-            'message' => 'Order not found'
+            'message' => 'لا يوجد طلب'
         ], 404);
     }
 }

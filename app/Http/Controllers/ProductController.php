@@ -58,7 +58,7 @@ class ProductController extends Controller
         }
 
         return response()->json([
-            'message' => 'Product created successfully',
+            'message' => 'تمت الاضافة بنجاح',
             'product' => $product,
         ], 201);
     }
@@ -72,7 +72,7 @@ class ProductController extends Controller
 
         if (!$iteam) {
             return response()->json([
-                'message' => 'no iteam to desplay',
+                'message' => 'لا يوجد منتج',
 
             ], 404);
         }
@@ -144,7 +144,7 @@ class ProductController extends Controller
         }
 
         return response()->json([
-            'message' => 'Product updated successfully',
+            'message' => 'تم تعديل المنتج بنجاح',
             'product' => $product,
         ], 200);
     }
@@ -155,7 +155,7 @@ class ProductController extends Controller
         $product->delete();
 
 
-        return response()->json(['message' => 'Product deleted successfully'], 200);
+        return response()->json(['message' => 'تم حذف المنتج بنجاح'], 200);
     }
 
 
@@ -168,7 +168,7 @@ class ProductController extends Controller
 
         if ($sukerProducts->isEmpty()) {
             return response()->json([
-                'message' => 'There are no ' . $type . ' products',
+                'message' => 'لا يوجد منتجات',
             ], 404);
         }
     
@@ -221,14 +221,14 @@ class ProductController extends Controller
         if ($product) {
             $product->displayOrNot = !$product->displayOrNot;
             $product->save();
-            $state = $product->displayOrNot ? "the product is on" : "the product is off";
+            $state = $product->displayOrNot ? "تم عرض المنتج" : "تم ايقاف عرض المنتج";
             return response()->json([
                 'message' => $state,
             ]);
         } else {
     
             return response()->json([
-                'message' => 'there is no product',
+                'message' => 'لا يوجد منتج',
             ]);
         }
     }

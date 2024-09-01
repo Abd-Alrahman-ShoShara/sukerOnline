@@ -23,13 +23,13 @@ class RateAndReviewController extends Controller
     
         if ($done) {
             return response()->json([
-                'message' => 'Rate and review created successfully',
+                'message' => 'تم التققيم بنجاح',
                 'Rate' => $done,
             ], 201);
         }
     
         return response()->json([
-            'message' => 'Failed to create RateAndReview',
+            'message' => 'حدثت مشكلة في التقييم ',
         ], 400);
     }
     public function RateAndReviewDetails($RateAndReview_id){
@@ -47,6 +47,8 @@ class RateAndReviewController extends Controller
             'RateAndReview' => RateAndReview::with('users')->get(),
         ], 200);    
     }
+
+    
     public function displayRateOrNot($rateAndReview_id)
     {
         $rateAndReview = RateAndReview::findOrFail($rateAndReview_id);

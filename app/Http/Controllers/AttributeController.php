@@ -23,8 +23,8 @@ class AttributeController extends Controller
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
 
         return response()->json([
-            'message' => 'Time updated successfully',
-        ]);
+            'message' => 'تم تعديل ساعات العمل بنجاح',
+        ],200);
     }
 
     public function getWorkTime()
@@ -62,8 +62,8 @@ class AttributeController extends Controller
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
 
         return response()->json([
-            'message' => 'abouteUs updated successfully',
-        ]);
+            'message' => 'تم تعديل المعلومات بنجاح',
+        ],200);
     }
     public function getPhoneNumbers()
     {
@@ -95,8 +95,8 @@ class AttributeController extends Controller
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
         
         return response()->json([
-            'message' => 'abouteUs updated successfully',
-        ]);
+            'message' => 'تم تعديل ارقام التواصل بنجاح',
+        ],200);
     }
     
     
@@ -116,8 +116,8 @@ class AttributeController extends Controller
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
         
         return response()->json([
-            'message' => 'storePrice updated successfully',
-        ]);
+            'message' => 'تم تعديل سعرالطلبيةالمخزنة بنجاح',
+        ],200);
     }
     public function getPrices()
     {
@@ -144,8 +144,8 @@ class AttributeController extends Controller
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
         
         return response()->json([
-            'message' => 'UrgentPrice updated successfully',
-        ]);
+            'message' => 'تم تعديل سعر الطلبية المستعجلة بنجاح',
+        ],200);
     }
     
     public function AppOnOff()
@@ -167,7 +167,7 @@ class AttributeController extends Controller
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
     
         return response()->json([
-            'message' => $config['isActive'] ? 'App is now active' : 'App is now inactive',
-        ]);
+            'message' => $config['isActive'] ? 'التطبيق قسد العمل ' : 'التطبيق في حالة صيانة',
+        ],200);
     }
 }
