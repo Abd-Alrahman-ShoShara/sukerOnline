@@ -26,6 +26,9 @@ class Product extends Model
     public function classificationProduct(){
         return $this->hasMany(ClassificationProduct::class,'classification_id');
     }
+    public function cart(){
+        return $this->hasMany(Cart::class);
+    }
     public function classification()
     {
         return $this->belongsToMany(Classification::class, 'classification_products');

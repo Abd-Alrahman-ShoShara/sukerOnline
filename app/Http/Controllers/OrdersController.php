@@ -516,16 +516,19 @@ public function editStateOfOrder(Request $request, $order_id)
     }
 
     $report = $orders->map(function ($order) {
-        $items = Cart::where('order_id', $order->id)->get()->map(function ($item) {
-            $product = Product::find($item->product_id);
-            return [
-                'product_id' => $item->product_id,
-                'name' => $item->name,
-                'quantity' => $item->quantity,
-                'price' => $product->price,
-                'total' => $product->price * $item->quantity,
-            ];
-        });
+        $items = Cart::where('order_id', $order->id)
+            ->with('Product') 
+            ->get()
+            ->map(function ($item) {
+               
+                return [
+                    'product_id' => $item->product_id,
+                    'name' => $item->Product->name, 
+                    'quantity' => $item->quantity,
+                    'price' => $item->Product->price,
+                    'total' => $item->Product->price * $item->quantity,
+                ];
+            });
 
         return [
             'order_id' => $order->id,
