@@ -519,6 +519,7 @@ public function editStateOfOrder(Request $request, $order_id)
             $product = Product::find($item->product_id);
             return [
                 'product_id' => $item->product_id,
+                'name' => $item->name,
                 'quantity' => $item->quantity,
                 'price' => $product->price,
                 'total' => $product->price * $item->quantity,
