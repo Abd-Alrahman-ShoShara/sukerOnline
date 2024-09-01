@@ -506,29 +506,29 @@ public function editStateOfOrder(Request $request, $order_id)
     $startDate = $request->start_date;
     $endDate = $request->end_date;
 
+    // Eager load both 'users' and 'carts.Product' for efficiency
     $orders = Order::whereBetween('created_at', [
         $startDate . ' 00:00:00',
         $endDate . ' 23:59:59'
-    ])->get();
+    ])
+    ->with('users')
+    ->with('carts.Product')
+    ->get();
 
     if ($orders->isEmpty()) {
         return response()->json(['message' => 'لا يوجد طلبات في التاريخ المحدد']);
     }
 
     $report = $orders->map(function ($order) {
-        $items = Cart::where('order_id', $order->id)
-            ->with('Product') 
-            ->get()
-            ->map(function ($item) {
-               
-                return [
-                    'product_id' => $item->product_id,
-                    'name' => $item->Product->name, 
-                    'quantity' => $item->quantity,
-                    'price' => $item->Product->price,
-                    'total' => $item->Product->price * $item->quantity,
-                ];
-            });
+        $items = $order->carts->map(function ($item) {
+            return [
+                'product_id' => $item->product_id,
+                'name' => $item->Product->name, 
+                'quantity' => $item->quantity,
+                'price' => $item->Product->price,
+                'total' => $item->Product->price * $item->quantity,
+            ];
+        });
 
         return [
             'order_id' => $order->id,
@@ -537,12 +537,22 @@ public function editStateOfOrder(Request $request, $order_id)
             'totalPrice' => $order->totalPrice,
             'created_at' => $order->created_at->format('Y-m-d H:i:s'),
             'items' => $items,
+            'user' => [
+                'id' => $order->users->id, 
+                'name' => $order->users->name, 
+                'phone' => $order->users->phone, 
+                'classification' => $order->users->classification->name, 
+                'adress' => $order->users->adress,
+                
+            ]
         ];
     });
 
     return response()->json([
         'report' => $report
     ]);
+
+
 }
 
 public function orderByStateForAdmin(Request $request)

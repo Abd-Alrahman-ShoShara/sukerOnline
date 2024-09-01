@@ -23,9 +23,9 @@ class User extends Authenticatable
         'password',
         'role',
         'classification_id',
+        'adress',
         'nameOfStore',
         'userPoints',
-        'adress',
         'fcm_token',
         
     ];
