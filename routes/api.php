@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\ClassificationController;
 use App\Http\Controllers\ComplaintsAndSuggestionController;
 use App\Http\Controllers\MaintenanceModeController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrdersController;
 use App\Http\Controllers\PointsOrderController;
 use App\Http\Controllers\PointsProductController;
@@ -140,6 +141,7 @@ Route::post('/orderByStateForAdmin', [OrdersController::class, 'orderByStateForA
 Route::post('/AppOnOff', [AttributeController::class, 'AppOnOff']);
 
 Route::post('/choseLanguage',[AuthenticationController::class,'choseLanguage'])->middleware('auth:api');
+Route::post('/send-notification',[NotificationController::class,'sendPushNotification']);
 
 Route::middleware(['OnOffApp'])->group(function () {
     

@@ -6,6 +6,8 @@ use App\Models\PointsProduct;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
+use App\Services\FirebaseService;
+
 use App\Notifications\FirebasePushNotification;
 class PointsProductController extends Controller
 {
@@ -128,9 +130,10 @@ class PointsProductController extends Controller
             $product->displayOrNot = !$product->displayOrNot;
             $product->save();
             if($product->displayOrNot){
-                $users=User::where('role','1')->get();
+                $users=User::where([['role','1'],['is_verified',true]])->get();
                 foreach($users as $user){
-                    $user->notify(new FirebasePushNotification('Product', 'ther is a new Point Product'));
+                    $notificationController = new NotificationController(new FirebaseService()); 
+                    $notificationController->sendPushNotification($user->fcm_token,'Product', 'ther is a new Point Product',['pointsProduct_id'=>$pointsProduct_id]); 
                 }
             }
             $state = $product->displayOrNot ? "تم عرض المنتج" : "تم ايقاف عرض المنتج";

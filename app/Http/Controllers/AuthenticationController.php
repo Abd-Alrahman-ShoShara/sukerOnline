@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use UltraMsg\WhatsAppApi;
-use App\Notifications\FirebasePushNotification;
+
 class AuthenticationController extends Controller
 {
 
@@ -219,11 +219,8 @@ class AuthenticationController extends Controller
         $user->type = $user->role == 0 ? 'admin' : 'user';
     
         $token = $user->createToken('auth_token')->accessToken;
-    
-        // Optionally send a notification (replace with your actual notification logic)
-        // if ($user->role == 0) { // Only for admins
-        //     $user->notify(new FirebasePushNotification('Login', 'Admin login successful'));
-        // }
+        
+
         return response()->json([
             'user' => $user,
             'token' => $token

@@ -7,6 +7,7 @@ use App\Models\PointsOrder;
 use App\Models\PointsProduct;
 use App\Models\User;
 use App\Notifications\FirebasePushNotification;
+use App\Services\FirebaseService;
 use DB;
 use Illuminate\Http\Request;
 
@@ -328,8 +329,9 @@ class PointsOrderController extends Controller
             case 'preparing':
                 if ($order->state == 'pending') {
                     $order->update(['state' => $request->input('state')]);
-                    $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['pointsOrder_id'=>$pointsOrder_id]));
 
+                    $notificationController = new NotificationController(new FirebaseService()); 
+                    $notificationController->sendPushNotification($user->fcm_token,'الطلب','طلبك قيد التحضير ',['pointOrder_id'=>$pointsOrder_id]);
                     return response()->json([
                         'message' => 'تم تعديل حالة الطلب'
                     ]);
@@ -341,8 +343,8 @@ class PointsOrderController extends Controller
             case 'sent':
                 if ($order->state == 'preparing') {
                     $order->update(['state' => $request->input('state')]);
-                    $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['pointsOrder_id'=>$pointsOrder_id]));
-
+                    $notificationController = new NotificationController(new FirebaseService()); 
+                    $notificationController->sendPushNotification($user->fcm_token,'الطلب','طلبك قيد الارسال ',['pointOrder_id'=>$pointsOrder_id]);
                     return response()->json([
                         'message' => 'تم تعديل حالة الطلب'
                     ]);
@@ -354,8 +356,8 @@ class PointsOrderController extends Controller
             case 'received':
                 if ($order->state == 'sent') {
                     $order->update(['state' => $request->input('state')]);
-                    $user->notify(new FirebasePushNotification('Order', 'your order is '.$request->input('state'),['pointsOrder_id'=>$pointsOrder_id]));
-
+                    $notificationController = new NotificationController(new FirebaseService()); 
+                    $notificationController->sendPushNotification($user->fcm_token,'الطلب','تم تسليمك الطلب  ',['pointOrder_id'=>$pointsOrder_id]);
                     return response()->json([
                         'message' => 'تم تعديل حالة الطلب'
                     ]);

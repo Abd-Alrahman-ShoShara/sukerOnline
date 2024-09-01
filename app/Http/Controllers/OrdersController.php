@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\StoredOrder;
 use App\Models\User;
+use App\Services\FirebaseService;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -70,7 +71,8 @@ class OrdersController extends Controller
 
         if ($request->type == "urgent") {
             $user=User::where('role','0')->first();
-            $user->notify(new FirebasePushNotification('Order', 'لديك طلبية مستعجلة',['order_id'=>$order->id]));
+            $notificationController = new NotificationController(new FirebaseService()); 
+            $notificationController->sendPushNotification($user->fcm_token,'طلب جديد', 'لديك طلبية مستعجلة',['order_id'=>$order->id]);
 
             $configPath = config_path('staticPrice.json');
             $config = json_decode(File::get($configPath), true);
@@ -387,9 +389,11 @@ public function editStateOfOrder(Request $request, $order_id)
         switch ($request->input('state')) {
             case 'preparing':
                 if ($order->state == 'pending') {
+
                     $order->update(['state' => $request->input('state')]);
-                    $user->notify(new FirebasePushNotification('Order', 'طلبك '.$request->input('state'),['order_id'=>$order_id]));
-                    return response()->json([
+                    $notificationController = new NotificationController(new FirebaseService()); 
+                    $notificationController->sendPushNotification($user->fcm_token,'الطلب','طلبك قيد التحضير ',['order_id'=>$order_id]); 
+                            return response()->json([
                         'message' => 'تم تعديل حالة الطلب'
                     ]);
                 } else {
@@ -400,7 +404,9 @@ public function editStateOfOrder(Request $request, $order_id)
             case 'sent':
                 if ($order->state == 'preparing') {
                     $order->update(['state' => $request->input('state')]);
-                    $user->notify(new FirebasePushNotification('Order', 'طلبك '.$request->input('state'),['order_id'=>$order_id]));
+                  
+                    $notificationController = new NotificationController(new FirebaseService()); 
+                    $notificationController->sendPushNotification($user->fcm_token,'الطلب','طلبك قيد الارسال ',['order_id'=>$order_id]);
                     return response()->json([
                         'message' => 'تم تعديل حالة الطلب'
                     ]);
@@ -412,8 +418,9 @@ public function editStateOfOrder(Request $request, $order_id)
             case 'received':
                 if ($order->state == 'sent') {
                     $order->update(['state' => $request->input('state')]);
-                    $user->notify(new FirebasePushNotification('Order', 'طلبك '.$request->input('state'),['order_id'=>$order_id]));
-                    return response()->json([
+
+                    $notificationController = new NotificationController(new FirebaseService()); 
+                    $notificationController->sendPushNotification($user->fcm_token,'الطلب','تم تسليمك الطلب',['order_id'=>$order_id]);                    return response()->json([
                         'message' => 'تم تعديل حالة الطلب'
                     ]);
                 } else {
