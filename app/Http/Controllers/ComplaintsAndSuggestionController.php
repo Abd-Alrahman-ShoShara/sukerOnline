@@ -14,7 +14,7 @@ class ComplaintsAndSuggestionController extends Controller
             "type" => "required|in:complaints,suggestions",
             "body" => "required|string",
         ]);
-        $com=$request->type=='complaints'? 'شكوى' : "اقتراح";
+        $com=$request->type=='complaints'? trans('Complaints.Complaint') : trans('Complaints.suggestion');
 
         $done = ComplaintsAndSuggestion::create([
             'user_id' => Auth::user()->id,
@@ -24,13 +24,13 @@ class ComplaintsAndSuggestionController extends Controller
 
         if ($done) {
             return response()->json([
-                'message' => 'تم انشاء '.$com. ' بنجاح',
+                'message' =>trans('Complaints.Created').$com,
                 'data' => $done,
             ], 200);
         }
 
         return response()->json([
-            'message' => 'فشل انشاء '.$com,
+            'message' => trans('Complaints.inCreated').$com,
         ], 400);
     }
     public function allComplaintsOrSuggestion(){
@@ -42,7 +42,7 @@ class ComplaintsAndSuggestionController extends Controller
            ], 200);    }
            else{
             return response([
-                'message' => 'لا يوجد شكاوي او اقتراحات ',
+                'message' => trans('Complaints.noComplaints')
             ], 200);
            }
        }
@@ -59,7 +59,7 @@ class ComplaintsAndSuggestionController extends Controller
         if($ComplaintsOrSuggestion->isEmpty()){
 
             return response([
-                'message'=>'لا يوجد شكاوي او اقتراحات',
+                'message'=> trans('Complaints.noComplaints'),
             ], 200);    }
 
         return response([

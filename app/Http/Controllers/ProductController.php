@@ -58,7 +58,7 @@ class ProductController extends Controller
         }
 
         return response()->json([
-            'message' => 'تمت الاضافة بنجاح',
+            'message' => trans('Complaints.Created'),
             'product' => $product,
         ], 201);
     }
@@ -72,7 +72,7 @@ class ProductController extends Controller
 
         if (!$iteam) {
             return response()->json([
-                'message' => 'لا يوجد منتج',
+                'message' => trans('product.noProduct'),
 
             ], 404);
         }
@@ -144,7 +144,7 @@ class ProductController extends Controller
         }
 
         return response()->json([
-            'message' => 'تم تعديل المنتج بنجاح',
+            'message' => trans('normalOrder.updated'),
             'product' => $product,
         ], 200);
     }
@@ -155,7 +155,7 @@ class ProductController extends Controller
         $product->delete();
 
 
-        return response()->json(['message' => 'تم حذف المنتج بنجاح'], 200);
+        return response()->json(['message' => trans('product.deleteProduct')], 200);
     }
 
 
@@ -168,7 +168,7 @@ class ProductController extends Controller
 
         if ($sukerProducts->isEmpty()) {
             return response()->json([
-                'message' => 'لا يوجد منتجات',
+                'message' => trans('product.noProduct'),
             ], 404);
         }
     
@@ -221,14 +221,14 @@ class ProductController extends Controller
         if ($product) {
             $product->displayOrNot = !$product->displayOrNot;
             $product->save();
-            $state = $product->displayOrNot ? "تم عرض المنتج" : "تم ايقاف عرض المنتج";
+            $state = $product->displayOrNot ? trans('product.onProduct') :trans('product.offProduct');
             return response()->json([
                 'message' => $state,
             ]);
         } else {
     
             return response()->json([
-                'message' => 'لا يوجد منتج',
+                'message' => trans('product.noProduct'),
             ]);
         }
     }

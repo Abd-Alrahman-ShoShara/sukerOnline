@@ -45,7 +45,7 @@ class AuthenticationController extends Controller
         $this->sendCode($user['phone'], $code,$user['name']);
 
         return response([
-            'message' => 'تم التسجيل بنجاح , الرجاء ادخال كود التأكيد',
+            'message' => trans('auth.registration_success'),
             'user_id' => $user->id,
 
         ],200);
@@ -68,13 +68,13 @@ class AuthenticationController extends Controller
         $user->save();
          $token=$user->createToken('auth_token')->accessToken;
         return response([
-            'message' => 'تم التأكيد بنجاح',
+            'message' =>trans('auth.message') ,
             'token'=>$token,
         ],200);
     } else {
 
         return response([
-            'message' => 'الكود الذي ادخلته خاطئ الرجاء المحاولة مجدداً',
+            'message' =>trans('auth.verification_failed'),
         ], 422);
     }
 
@@ -84,7 +84,7 @@ class AuthenticationController extends Controller
     public function logout(){
         User::find(Auth::id())->tokens()->delete();
         return response([
-            'message'=>'تم تسجيل الخروج'
+            'message'=>trans('auth.logout')
         ]);
     }
     //////////////////////////////////////
@@ -96,7 +96,7 @@ class AuthenticationController extends Controller
         $user=User::where('phone',$request->phone)->first();
         if(!$user){
             return response()->json([
-                'message'=>'رقم الموبايل الذي ادخلته خاطئ'
+                'message'=>trans('auth.wrongNumber')
             ]);
         }
         $code = mt_rand(1000, 9999);
@@ -106,7 +106,7 @@ class AuthenticationController extends Controller
         $this->sendCode($user['phone'], $code,$user['name']);
 
         return response([
-            'message' => 'لقد ارسلنا كود تأكيد الى رقمك قم بادخاله ',
+            'message' => trans('auth.codeSent'),
             'user_id' => $user->id,
 
         ],200);
@@ -127,12 +127,12 @@ class AuthenticationController extends Controller
             
             
             return response([
-                'message' => 'تم التأكيد , ادخل كلمة السر الجديدة.',
+                'message' =>trans('auth.codeCorrect')
                 
             ],200);
         } else {
             return response([
-                'message' => 'الكود الذي قمت بادخاله خاطئ',
+                'message' => trans('auth.codeWrong')
             ], 422);
         }
         
@@ -152,7 +152,7 @@ class AuthenticationController extends Controller
         $user->fcm_token=$request['fcm_token'];
         $user->save();
          return response()->json([
-        'message'=> 'تم تعديل كلمة السر',
+        'message'=> trans('auth.editPassword'),
         'token'=>$token,
          ]);
 
@@ -170,11 +170,11 @@ class AuthenticationController extends Controller
 
         auth()->user()->update(['password' => Hash::make($request['NewPassword'])]);
         return response()->json([
-            'message' => 'تم تعديل كلمة السر.',
+            'message' => trans('auth.editPassword'),
         ]);
         } else {
         return response()->json([
-            'message' => 'كلمة السر القديمة خاطئة',
+            'message' => trans('auth.wrongPassword')
         ]);
         }
     }
@@ -210,7 +210,7 @@ class AuthenticationController extends Controller
     
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response([
-                'message' => 'المعلومات المدخلة خاطئة,الرجاء اعادة المحاولة'
+                'message' => trans('auth.wrongLogin')
             ], 403);
         }
         $user->fcm_token = $request->fcm_token; 
@@ -262,7 +262,7 @@ public function choseLanguage(Request $request) {
     $user->save();
 
     return response()->json([
-        'message' => 'تم تعديل لغة التطبيق بنجاح',
+        'message' => trans('auth.editLang'),
     ],200);
 }    
 }

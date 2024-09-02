@@ -8,7 +8,7 @@ use App\Models\PointsProduct;
 use App\Models\User;
 use App\Notifications\FirebasePushNotification;
 use App\Services\FirebaseService;
-use DB;
+
 use Illuminate\Http\Request;
 
 
@@ -33,7 +33,7 @@ class PointsOrderController extends Controller
             $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
             if ($product['quantity'] > $pointsProduct->quantity) {
                 return response()->json([
-                    'message' => 'كمية المنتج المطلوب غير متاحة',
+                    'message' => trans('normalOrder.noQuantity'),
                 ], 400);
             }
             $productPrice = $pointsProduct->price;
@@ -61,12 +61,12 @@ class PointsOrderController extends Controller
             }
 
             return response()->json([
-                'message' => 'تم انشاء الطلب بنجاح',
+                'message' => trans('Complaints.Created'),
                 'theOrder' => $pointsOrder->load('pointCarts'),
             ]);
         } else {
             return response()->json([
-                'message' => 'رصيدك من النقاط لايكفي لاتمام الطلب',
+                'message' =>trans('normalOrder.noEnoughPoint'),
             ], 400);
         }
     }
@@ -80,7 +80,7 @@ class PointsOrderController extends Controller
 
         if (!$pointsOrder) {
             return response()->json([
-                'message' => 'لا يوجد طلب',
+                'message' => trans('normalOrder.noOrder'),
             ], 404);
         }
 
@@ -96,7 +96,7 @@ class PointsOrderController extends Controller
     
         if (!$pointsOrder) {
             return response()->json([
-                'message' => 'You cannot remove the order. It may not exist or is not in a pending state.',
+                'message' => trans('normalOrder.cantDelete'),
             ], 200);
         }
     
@@ -121,9 +121,10 @@ class PointsOrderController extends Controller
         });
     
         return response()->json([
-            'message' => 'تم الغاء الطلب واسترجاع نقاطك',
+            'message' => trans('normalOrder.delete'),
         ], 200);
     }
+
     public function updatePointsOrder(Request $request, $order_id)
 
     {
@@ -138,7 +139,7 @@ class PointsOrderController extends Controller
     
         if (!$pointsOrder || $pointsOrder->user_id !== $user->id || !in_array($pointsOrder->state, ['pending', 'preparing'])) {
             return response()->json([
-                'message' => 'لا يمكن تعديل الطلبل',
+                'message' => trans('normalOrder.cantDelete'),
             ], 403);
         }
     
@@ -163,7 +164,7 @@ class PointsOrderController extends Controller
         // If the order has not changed, no need to proceed
         if (!$orderHasChanged && $newTotalPrice === $pointsOrder->totalPrice) {
             return response()->json([
-                'message' => 'لم يتم تغيير معلومات الطلب',
+                'message' => trans('normalOrder.sameOrder'),
             ]);
         }
     
@@ -173,7 +174,7 @@ class PointsOrderController extends Controller
     
             // Check if the user has enough points for the update
             if ($pointsDifference > 0 && $user->userPoints < $pointsDifference) {
-                throw new \Exception('رصيدك من النقاط لا يكفي للطلب الجديد ');
+                throw new \Exception(trans('normalOrder.noEnoughPoint'),);
             }
     
             // Adjust user points
@@ -192,7 +193,7 @@ class PointsOrderController extends Controller
                 // If the new quantity is greater than the existing quantity, decrease stock
                 if ($quantityDifference > 0) {
                     if ($pointsProduct->quantity < $quantityDifference) {
-                        throw new \Exception('كمية المنتج المطلوب غير متاحة');
+                        throw new \Exception(trans('normalOrder.noQuantity'),);
                     }
                     $pointsProduct->decrement('quantity', $quantityDifference);
                 } 
@@ -214,7 +215,7 @@ class PointsOrderController extends Controller
         });
     
         return response()->json([
-            'message' => 'تم تعديل الطلب بنجاح',
+            'message' =>trans('normalOrder.updated'),
             'theOrder' => $pointsOrder->load('pointCarts'),
         ]);
     }
@@ -291,7 +292,7 @@ class PointsOrderController extends Controller
 
         if ($pointsOrder->isEmpty()) {
             return response()->json([
-                'message' => 'لا يوجد طلبات',
+                'message' => trans('normalOrder.noOrder'),
             ]);
         }
 
@@ -310,7 +311,7 @@ class PointsOrderController extends Controller
             ], 200);
         } else {
             return response()->json([
-                'message' => 'لا يوجد طلبات'
+                'message' => trans('normalOrder.noOrder')
             ]);
         }
     }
@@ -331,39 +332,39 @@ class PointsOrderController extends Controller
                     $order->update(['state' => $request->input('state')]);
 
                     $notificationController = new NotificationController(new FirebaseService()); 
-                    $notificationController->sendPushNotification($user->fcm_token,'الطلب','طلبك قيد التحضير ',['pointOrder_id'=>$pointsOrder_id]);
+                    $notificationController->sendPushNotification($user->fcm_token,trans('normalOrder.order'),trans('normalOrder.preparing'),['pointOrder_id'=>$pointsOrder_id]);
                     return response()->json([
-                        'message' => 'تم تعديل حالة الطلب'
+                        'message' =>trans('normalOrder.stateUpdate')
                     ]);
                 } else {
                     return response()->json([
-                        'message' => 'الطلب ليس قيد الانتظار'
+                        'message' => trans('normalOrder.notPending')
                     ], 403);
                 }
             case 'sent':
                 if ($order->state == 'preparing') {
                     $order->update(['state' => $request->input('state')]);
                     $notificationController = new NotificationController(new FirebaseService()); 
-                    $notificationController->sendPushNotification($user->fcm_token,'الطلب','طلبك قيد الارسال ',['pointOrder_id'=>$pointsOrder_id]);
+                    $notificationController->sendPushNotification($user->fcm_token,trans('normalOrder.order'),trans('normalOrder.sent'),['pointOrder_id'=>$pointsOrder_id]);
                     return response()->json([
-                        'message' => 'تم تعديل حالة الطلب'
+                        'message' => trans('normalOrder.stateUpdate')
                     ]);
                 } else {
                     return response()->json([
-                        'message' => 'الطلب ليس قيد التحضير'
+                        'message' => trans('normalOrder.notPreparing')
                     ], 403);
                 }
             case 'received':
                 if ($order->state == 'sent') {
                     $order->update(['state' => $request->input('state')]);
                     $notificationController = new NotificationController(new FirebaseService()); 
-                    $notificationController->sendPushNotification($user->fcm_token,'الطلب','تم تسليمك الطلب  ',['pointOrder_id'=>$pointsOrder_id]);
+                    $notificationController->sendPushNotification($user->fcm_token,trans('normalOrder.order'),trans('normalOrder.received'),['pointOrder_id'=>$pointsOrder_id]);
                     return response()->json([
-                        'message' => 'تم تعديل حالة الطلب'
+                        'message' => trans('normalOrder.stateUpdate')
                     ]);
                 } else {
                     return response()->json([
-                        'message' => 'الطلب ليس قيد الارسال'
+                        'message' => trans('normalOrder.notReceived')
                     ], 403);
                 }
             default:
@@ -373,7 +374,7 @@ class PointsOrderController extends Controller
         }
     } else {
         return response()->json([
-            'message' => 'لا يوجد طلب'
+            'message' => trans('normalOrder.noOrder')
         ], 404);
     }
 }

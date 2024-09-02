@@ -42,7 +42,7 @@ class PointsProductController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Product created successfully',
+            'message' => trans('Complaints.Created'),
             'pointsProduct' => $pointsProduct,
         ], 201);
     }
@@ -110,7 +110,7 @@ class PointsProductController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'PointsProduct updated successfully',
+            'message' => trans('normalOrder.updated'),
             'PointsProduct' => $PointsProduct,
         ], 200);
     }
@@ -120,7 +120,7 @@ class PointsProductController extends Controller
         $PointsProduct = PointsProduct::findOrFail($PointsProduct_id);
         $PointsProduct->delete();
 
-        return response()->json(['message' => 'Product deleted successfully'], 200);
+        return response()->json(['message' => trans('product.deleteProduct')], 200);
     }
 
     public function onOffPointsProduct($pointsProduct_id)
@@ -133,17 +133,17 @@ class PointsProductController extends Controller
                 $users=User::where([['role','1'],['is_verified',true]])->get();
                 foreach($users as $user){
                     $notificationController = new NotificationController(new FirebaseService()); 
-                    $notificationController->sendPushNotification($user->fcm_token,'Product', 'ther is a new Point Product',['NewpointsProduct_id'=>$pointsProduct_id]); 
+                    $notificationController->sendPushNotification($user->fcm_token,trans('product.Product'), trans('product.newProduct'),['NewpointsProduct_id'=>$pointsProduct_id]); 
                 }
             }
-            $state = $product->displayOrNot ? "تم عرض المنتج" : "تم ايقاف عرض المنتج";
+            $state = $product->displayOrNot ? trans('product.onProduct') : trans('product.offProduct');
             return response()->json([
                 'message' => $state,
             ]);
         } else {
     
             return response()->json([
-                'message' => 'لايوجد منتج',
+                'message' =>trans('product.noProduct'),
             ]);
         }
     }

@@ -73,7 +73,7 @@ class OrdersController extends Controller
             $user1=User::where('role','0')->first();
             
             $notificationController = new NotificationController(new FirebaseService()); 
-            $notificationController->sendPushNotification($user1->fcm_token,'طلب جديد', 'لديك طلبية مستعجلة',['urgent'=>$order->id]);
+            $notificationController->sendPushNotification($user1->fcm_token,trans('normalOrder.newOrder'), trans('normalOrder.notiUrgent'),['urgent'=>$order->id]);
 
             $configPath = config_path('staticPrice.json');
             $config = json_decode(File::get($configPath), true);
@@ -86,7 +86,7 @@ class OrdersController extends Controller
         $order->save();
 
         return response()->json([
-            'message'=>'تم انشاء طلب بنجاح',
+            'message'=>trans('Complaints.Created'),
             'theOrder' => $order,
 
         ]);
@@ -127,7 +127,7 @@ class OrdersController extends Controller
     $user->save();
 
     return response()->json([
-        'message'=>'تم انشاء طلب بنجاح',
+        'message'=>trans('Complaints.Created'),
         'theOrder' => $order,
     ]);
 }
@@ -147,7 +147,7 @@ public function deleteOrder($order_id)
 
     if (!$order) {
         return response()->json([
-            'message' => 'لا يمكنك الغاء الطلب',
+            'message' => trans('normalOrder.cantDelete'),
         ], 403);
     }
     $user = User::find($order->user_id);
@@ -160,147 +160,16 @@ public function deleteOrder($order_id)
     $order->delete();
 
     return response()->json([
-        'message' => 'تم الغاء الطلب بنجاح ',
+        'message' => trans('normalOrder.delete'),
     ], 200);
 }
 
-public function updateEssentialOrder(Request $request, $orderId)
-{
-    $order = Order::find($orderId);
-
-    if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
-        return response()->json(['error' => 'لا يمكنك تعديل الطلب '], 403);
-    }
-
-    $request->validate([
-        'products.*' => 'required|array',
-        'type' => 'sometimes|in:urgent,regular,stored',
-        'storingTime' => 'required_if:type,stored|integer'
-    ]);
-
-    if (!$request->has('type')) {
-        $request->merge(['type' => 'regular']);
-    }
-
-    $order->type = $request->type;
-    $order->save();
-
-    $totalPrice = 0;
-    $AllQuantity = 0;
-    $PointsToAdd = 0;
-
-    Cart::where('order_id', $order->id)->delete();
-
-    foreach ($request->products as $product) {
-        Cart::create([
-            'order_id' => $order->id,
-            'product_id' => $product['product_id'],
-            'quantity' => $product['quantity'],
-        ]);
-
-        $theproduct = Product::find($product['product_id']);
-        $productPrice = $theproduct->price;
-        $totalPrice += $productPrice * $product['quantity'];
-        $AllQuantity += $product['quantity'];
-        $PointsToAdd += $theproduct->points * $product['quantity'];
-    }
-
-    // Adjust user points
-    $user = User::find($order->user_id);
-    if (!$user) {
-        return response()->json(['error' => 'User not found for this order.'], 404);
-    }
-    $user->userPoints -= $order->points;  // Remove old points
-    $user->userPoints += $PointsToAdd;    // Add new points
-    $user->save();
-
-    $order->points = $PointsToAdd;  // Update the order points
-
-    $AllPrice = 0;
-
-    if ($request->type == "stored") {
-        $configPath = config_path('staticPrice.json');
-        $config = json_decode(File::get($configPath), true);
-        $storePrice = $config['storePrice'];
-        $AllPrice = $storePrice * $request->storingTime * $AllQuantity;
-
-        StoredOrder::updateOrCreate(
-            ['order_id' => $order->id],
-            ['storingTime' => $request->storingTime]
-        );
-    } else {
-        StoredOrder::where('order_id', $order->id)->delete();
-    }
-
-    if ($request->type == "urgent") {
-        $configPath = config_path('staticPrice.json');
-        $config = json_decode(File::get($configPath), true);
-        $urgentPrice = $config['urgentPrice'];
-        $AllPrice = $urgentPrice * $AllQuantity;
-    }
-
-    $order->totalPrice = $totalPrice + $AllPrice;
-    $order->save();
-
-    return response()->json([
-        'theOrder' => $order,
-    ]);
-}
-
-public function updateExtraOrder(Request $request, $orderId)
-{
-    $order = Order::find($orderId);
-
-    if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
-        return response()->json(['error' => 'لايمكنك تعديل الطلب'], 403);
-    }
-
-    $request->validate([
-        'products.*' => 'required|array',
-    ]);
-
-    $totalPrice = 0;
-    $PointsToAdd = 0;
-
-    Cart::where('order_id', $order->id)->delete();
-
-    foreach ($request->products as $product) {
-        Cart::create([
-            'order_id' => $order->id,
-            'product_id' => $product['product_id'],
-            'quantity' => $product['quantity'],
-        ]);
-
-        $theproduct = Product::find($product['product_id']);
-        $productPrice = $theproduct->price;
-        $totalPrice += $productPrice * $product['quantity'];
-        $PointsToAdd += $theproduct->points * $product['quantity'];
-    }
-
-    // Adjust user points
-    $user = User::find($order->user_id);
-    if (!$user) {
-        return response()->json(['error' => 'User not found for this order.'], 404);
-    }
-    $user->userPoints -= $order->points;  // Remove old points
-    $user->userPoints += $PointsToAdd;    // Add new points
-    $user->save();
-
-    $order->points = $PointsToAdd;  // Update the order points
-
-    $order->totalPrice = $totalPrice;
-    $order->save();
-
-    return response()->json([
-        'theOrder' => $order,
-    ]);
-}
 public function updateOrder(Request $request, $orderId)
 {
     $order = Order::find($orderId);
 
     if (!$order || !in_array($order->state, ['pending', 'preparing'])) {
-        return response()->json(['error' => 'لا يمكنك تعديل الطلب'], 403);
+        return response()->json(['error' => trans('normalOrder.cantUpdate')], 403);
     }
 
     $request->validate([
@@ -373,7 +242,7 @@ public function updateOrder(Request $request, $orderId)
     $order->save();
 
     return response()->json([
-        'message'=>'تم تعديل الطلب بنجاح',
+        'message'=>trans('normalOrder.updated'),
         'theOrder' => $order,
     ]);
 }
@@ -393,13 +262,13 @@ public function editStateOfOrder(Request $request, $order_id)
 
                     $order->update(['state' => $request->input('state')]);
                     $notificationController = new NotificationController(new FirebaseService()); 
-                    $notificationController->sendPushNotification($user->fcm_token,'الطلب','طلبك قيد التحضير ',['order_id'=>$order_id]); 
+                    $notificationController->sendPushNotification($user->fcm_token,trans('normalOrder.order'),trans('normalOrder.preparing'),['order_id'=>$order_id]); 
                             return response()->json([
-                        'message' => 'تم تعديل حالة الطلب'
+                        'message' => trans('normalOrder.stateUpdate')
                     ]);
                 } else {
                     return response()->json([
-                        'message' => 'الطلب ليس قيد الانتظار'
+                        'message' => trans('normalOrder.notPending')
                     ], 403);
                 }
             case 'sent':
@@ -407,13 +276,13 @@ public function editStateOfOrder(Request $request, $order_id)
                     $order->update(['state' => $request->input('state')]);
                   
                     $notificationController = new NotificationController(new FirebaseService()); 
-                    $notificationController->sendPushNotification($user->fcm_token,'الطلب','طلبك قيد الارسال ',['order_id'=>$order_id]);
+                    $notificationController->sendPushNotification($user->fcm_token,trans('normalOrder.order'),trans('normalOrder.sent'),['order_id'=>$order_id]);
                     return response()->json([
-                        'message' => 'تم تعديل حالة الطلب'
+                        'message' => trans('normalOrder.stateUpdate')
                     ]);
                 } else {
                     return response()->json([
-                        'message' => 'الطلب ليس قيد التحضير'
+                        'message' =>trans('normalOrder.notPreparing')
                     ], 403);
                 }
             case 'received':
@@ -421,12 +290,13 @@ public function editStateOfOrder(Request $request, $order_id)
                     $order->update(['state' => $request->input('state')]);
 
                     $notificationController = new NotificationController(new FirebaseService()); 
-                    $notificationController->sendPushNotification($user->fcm_token,'الطلب','تم تسليمك الطلب',['order_id'=>$order_id]);                    return response()->json([
-                        'message' => 'تم تعديل حالة الطلب'
+                    $notificationController->sendPushNotification($user->fcm_token,trans('normalOrder.order'),trans('normalOrder.received'),['order_id'=>$order_id]);                
+                        return response()->json([
+                        'message' => trans('normalOrder.stateUpdate')
                     ]);
                 } else {
                     return response()->json([
-                        'message' => 'الطلب ليس قيد الارسال'
+                        'message' => trans('normalOrder.notReceived')
                     ], 403);
                 }
             default:
@@ -441,7 +311,7 @@ public function editStateOfOrder(Request $request, $order_id)
     }
 }
 
-    public function reportUserOrders(Request $request)
+public function reportUserOrders(Request $request)
     {
         $request->validate([
             'date' => 'required_without_all:start_date,end_date|date|date_format:Y-m-d',
@@ -467,7 +337,7 @@ public function editStateOfOrder(Request $request, $order_id)
         }
 
         if ($orders->isEmpty()) {
-            return response()->json(['message' => 'لا يوجد طلبات في التاريخ المحدد']);
+            return response()->json(['message' => trans('normalOrder.noDateOrder')]);
         }
 
         $report = $orders->map(function ($order) {
@@ -496,7 +366,8 @@ public function editStateOfOrder(Request $request, $order_id)
             'report' => $report
         ]);
     }
-    public function reportAdminOrdersBetweenDates(Request $request)
+
+public function reportAdminOrdersBetweenDates(Request $request)
 {
     $request->validate([
         'start_date' => 'required|date|date_format:Y-m-d',
@@ -516,7 +387,7 @@ public function editStateOfOrder(Request $request, $order_id)
     ->get();
 
     if ($orders->isEmpty()) {
-        return response()->json(['message' => 'لا يوجد طلبات في التاريخ المحدد']);
+        return response()->json(['message' => trans('normalOrder.noDateOrder')]);
     }
 
     $report = $orders->map(function ($order) {
@@ -603,7 +474,7 @@ public function allOrders(Request $request)
 
     if ($orders->isEmpty()) {
         return response()->json([
-            'message' => 'لا يوجد طلبات ',
+            'message' =>trans('normalOrder.noOrder'),
         ]);
     }
 
@@ -638,7 +509,7 @@ public function allOrdersUser(Request $request)
 
     if ($orders->isEmpty()) {
         return response()->json([
-            'message' => 'لا يوجد طلبات',
+            'message' => trans('normalOrder.noOrder'),
         ]);
     }
 
@@ -670,5 +541,8 @@ public function userOrders(Request $request, $user_id)
         'ordersOfUsers' => $orders,
     ]);
 }
+
+
+
 }
 

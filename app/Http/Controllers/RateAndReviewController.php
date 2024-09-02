@@ -23,13 +23,13 @@ class RateAndReviewController extends Controller
     
         if ($done) {
             return response()->json([
-                'message' => 'تم التققيم بنجاح',
+                'message' => trans('product.rated'),
                 'Rate' => $done,
             ], 201);
         }
     
         return response()->json([
-            'message' => 'حدثت مشكلة في التقييم ',
+            'message' => trans('product.unRated'),
         ], 400);
     }
     public function RateAndReviewDetails($RateAndReview_id){
