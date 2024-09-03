@@ -16,6 +16,10 @@ return [
     'wrongPassword'=>'Old password is wrong',
 
 
+    'Hi'=>'Hi',
+    'him'=>', your verification code is: ',
+
+
     'wrongLogin'=>'The entered information is incorrect, please try again',
     'editLang'=>'The application language has been successfully modified',
 ];

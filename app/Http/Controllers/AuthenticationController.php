@@ -14,41 +14,51 @@ class AuthenticationController extends Controller
 
 
     public function register(Request $request)
-{
-    $request->validate([
-        'name' => 'required|max:255',
-        'phone' => 'required|regex:/^[0-9]+$/',
-        'password' => 'required|min:6|confirmed',
-        'nameOfStore'=> 'required',
-        'classification_id'=>'required',
-        'adress'=> 'required',
-        'fcm_token'=> 'required',
-    ]);
-
-    $user = User::firstOrCreate(
-        ['phone' => $request->phone],
-        [
-            'name' => $request->name,
-            'password' => Hash::make($request->password),
-            'adress' => $request->adress,
-            'classification_id' => $request->classification_id,
-            'nameOfStore' => $request->nameOfStore,
-            'fcm_token' => $request->fcm_token,
-            'is_verified' => false,
-        ]
-    );
-
-    $code = mt_rand(1000, 9999);
-    $user->verification_code = $code;
-    $user->save();
-
-    $this->sendCode($user->phone, $code, $user->name);
-
-    return response([
-        'message' => trans('auth.registration_success'),
-        'user_id' => $user->id,
-    ], 200);
-}
+    {
+        $request->validate([
+            'name' => 'required|max:255',
+            'phone' => 'required|regex:/^[0-9]+$/',
+            'password' => 'required|min:6|confirmed',
+            'nameOfStore'=> 'required',
+            'classification_id'=>'required',
+            'adress'=> 'required',
+            'fcm_token'=> 'required',
+        ]);
+    
+        // Check if the phone number already exists and is verified
+        $existingUser = User::where('phone', $request->phone)->first();
+    
+        if ($existingUser && $existingUser->is_verified) {
+            return response([
+                'message' => trans('auth.already_verified'),
+            ], 400);
+        }
+    
+        // Create or update the user if not verified
+        $user = User::updateOrCreate(
+            ['phone' => $request->phone],
+            [
+                'name' => $request->name,
+                'password' => Hash::make($request->password),
+                'adress' => $request->adress,
+                'classification_id' => $request->classification_id,
+                'nameOfStore' => $request->nameOfStore,
+                'fcm_token' => $request->fcm_token,
+                'is_verified' => false,
+            ]
+        );
+    
+        $code = mt_rand(1000, 9999);
+        $user->verification_code = $code;
+        $user->save();
+    
+        $this->sendCode($user->phone, $code, $user->name);
+    
+        return response([
+            'message' => trans('auth.registration_success'),
+            'user_id' => $user->id,
+        ], 200);
+    }
     /////////////////////////////////////////////////////////////////////
     function verifyCode(Request $request)
 {
@@ -65,7 +75,7 @@ class AuthenticationController extends Controller
         $token = $user->createToken('auth_token')->accessToken;
 
         return response([
-            'message' => trans('auth.message'),
+            'message' => trans('auth.verification_success'),
             'token' => $token,
         ], 200);
     } else {
@@ -210,7 +220,7 @@ public function resendCode(Request $request)
         $number = "+963" . substr($phoneNumber, 1, 9);
         $to = $number;
 
-        $body = 'Hi ' . $name . ', your verification code is: ' . $code ;
+        $body =trans('auth.Hi') . $name . trans('auth.him') . $code ;
         $client->sendChatMessage($to, $body);
         // return $this->success(null, 'we send the code');
     }
