@@ -10,6 +10,8 @@ return [
     'codeSent'=>'We have sent a confirmation code to your number, enter it',
     'codeCorrect'=>'Confirmed, enter new password.',
     'codeWrong'=>'The code you entered is incorrect',
+    'already_verified' => 'Your account is already verified.',
+    'code_resent' => 'Verification code resent successfully.',
     'editPassword'=>'Password has been modified',
     'wrongPassword'=>'Old password is wrong',
 

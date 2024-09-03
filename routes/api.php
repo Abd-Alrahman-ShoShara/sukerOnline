@@ -39,6 +39,7 @@ Route::post('/login', [AuthenticationController::class, 'login']);
 Route::post('/forgetPassword', [AuthenticationController::class, 'forgetPassword']);
 
 Route::post('/verifyForgetPassword', [AuthenticationController::class, 'verifyForgetPassword']);
+Route::post('/resendCode', [AuthenticationController::class, 'resendCode']);
 
 Route::post('/resatPassword', [AuthenticationController::class, 'resatPassword']);
 

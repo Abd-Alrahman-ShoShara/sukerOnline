@@ -14,72 +14,91 @@ class AuthenticationController extends Controller
 
 
     public function register(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|max:255',
-            'phone' => 'required|unique:users|regex:/^[0-9]+$/',
-            'password' => 'required|min:6|confirmed',
-            'nameOfStore'=> 'required',
-            'classification_id'=>'required',
-            'adress'=> 'required',
-            'fcm_token'=> 'required',
-        ]);
+{
+    $request->validate([
+        'name' => 'required|max:255',
+        'phone' => 'required|regex:/^[0-9]+$/',
+        'password' => 'required|min:6|confirmed',
+        'nameOfStore'=> 'required',
+        'classification_id'=>'required',
+        'adress'=> 'required',
+        'fcm_token'=> 'required',
+    ]);
 
-        $user = User::create([
+    $user = User::firstOrCreate(
+        ['phone' => $request->phone],
+        [
             'name' => $request->name,
-            'phone' => $request->phone,
             'password' => Hash::make($request->password),
             'adress' => $request->adress,
             'classification_id' => $request->classification_id,
             'nameOfStore' => $request->nameOfStore,
-            'fcm_token'=>$request['fcm_token'],
-        ]);
+            'fcm_token' => $request->fcm_token,
+            'is_verified' => false,
+        ]
+    );
 
+    $code = mt_rand(1000, 9999);
+    $user->verification_code = $code;
+    $user->save();
 
-        // $token = $user->createToken('auth_token')->accessToken;
+    $this->sendCode($user->phone, $code, $user->name);
 
-        $code = mt_rand(1000, 9999);
-        $user->verification_code = $code;
-        $user->save();
-
-        $this->sendCode($user['phone'], $code,$user['name']);
-
-        return response([
-            'message' => trans('auth.registration_success'),
-            'user_id' => $user->id,
-
-        ],200);
-    }
+    return response([
+        'message' => trans('auth.registration_success'),
+        'user_id' => $user->id,
+    ], 200);
+}
     /////////////////////////////////////////////////////////////////////
     function verifyCode(Request $request)
-    {
-
+{
     $request->validate([
         'user_id' => 'required|exists:users,id',
         'code' => 'required',
-       
     ]);
 
     $user = User::findOrFail($request->user_id);
 
     if ($user->verification_code == $request->code) {
-        // Code is correct, perform any additional actions (e.g., update user status, etc.)
         $user->is_verified = true;
         $user->save();
-         $token=$user->createToken('auth_token')->accessToken;
-        return response([
-            'message' =>trans('auth.message') ,
-            'token'=>$token,
-        ],200);
-    } else {
+        $token = $user->createToken('auth_token')->accessToken;
 
         return response([
-            'message' =>trans('auth.verification_failed'),
+            'message' => trans('auth.message'),
+            'token' => $token,
+        ], 200);
+    } else {
+        return response([
+            'message' => trans('auth.verification_failed'),
         ], 422);
     }
+}
 
+public function resendCode(Request $request)
+{
+    $request->validate([
+        'phone' => 'required|exists:users,phone',
+    ]);
+
+    $user = User::where('phone', $request->phone)->firstOrFail();
+
+    if ($user->is_verified) {
+        return response([
+            'message' => trans('auth.already_verified'),
+        ], 400);
     }
 
+    $code = mt_rand(1000, 9999);
+    $user->verification_code = $code;
+    $user->save();
+
+    $this->sendCode($user->phone, $code, $user->name);
+
+    return response([
+        'message' => trans('auth.code_resent'),
+    ], 200);
+}
     /////////////////////////////////////////////
     public function logout(){
         User::find(Auth::id())->tokens()->delete();
