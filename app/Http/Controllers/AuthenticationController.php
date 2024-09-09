@@ -69,7 +69,7 @@ class AuthenticationController extends Controller
 
     $user = User::findOrFail($request->user_id);
 
-    if ($user->verification_code == $request->code) {
+    if ($user->verification_code != $request->code) {
         $user->is_verified = true;
         $user->save();
         $token = $user->createToken('auth_token')->accessToken;
