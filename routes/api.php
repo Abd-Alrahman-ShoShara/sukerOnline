@@ -42,6 +42,7 @@ Route::post('/verifyForgetPassword', [AuthenticationController::class, 'verifyFo
 Route::post('/resendCode', [AuthenticationController::class, 'resendCode']);
 
 Route::post('/resatPassword', [AuthenticationController::class, 'resatPassword']);
+Route::get('/allClassifications', [ClassificationController::class, 'allClassifications']);
 
 
 
@@ -80,7 +81,6 @@ Route::middleware('auth:api')->group(function () {
     /////////////////////////////////////////////////////////////////////////////////// classification
 
     Route::post('/AddClassification', [ClassificationController::class, 'AddClassification']);
-    Route::get('/allClassifications', [ClassificationController::class, 'allClassifications']);
     Route::delete('/deleteClassification/{classification_id}', [ClassificationController::class, 'deleteClassification']);
 
     //////////////////////////////////////////////////////////////////////////////////////ATTRIBUTES
