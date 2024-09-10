@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
+
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -53,6 +54,14 @@ class AuthenticationController extends Controller
         $user->save();
     
         $this->sendCode($user->phone, $code, $user->name);
+
+        if (Carbon::now()->isStartOfMonth()) {
+
+            $dateThreeDaysAgo = Carbon::now()->subDays(3);
+            $deletedUsersCount = User::where('is_verified', false)
+                ->where('created_at', '<', $dateThreeDaysAgo)
+                ->delete();
+        }
     
         return response([
             'message' => trans('auth.registration_success'),
