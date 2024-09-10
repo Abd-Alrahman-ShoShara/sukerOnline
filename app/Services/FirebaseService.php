@@ -12,7 +12,7 @@ class FirebaseService
 
     public function __construct()
     {
-        $seviceAccountPath= storage_path('sukeronline-122b5-firebase-adminsdk-a34cj-1211e28875.json');
+        $seviceAccountPath= storage_path('sukeronline-122b5-firebase-adminsdk-a34cj-020b7ceff5.json');
 
         $factory = (new Factory)->withServiceAccount($seviceAccountPath);
         $this->messaging = $factory->createMessaging();
