@@ -178,7 +178,7 @@ class ProductController extends Controller
                 'the_product' => $sukerProducts,
             ], 200);
         }
-  
+        //f
         return response()->json([
             'the_product' => $sukerProducts,
         ], 200);
