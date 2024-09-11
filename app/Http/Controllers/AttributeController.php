@@ -62,7 +62,7 @@ class AttributeController extends Controller
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
 
         return response()->json([
-            'message' => 'تم تعديل المعلومات بنجاح',
+            'message' => ' تم تعديل المعلومات بنجاح',
         ],200);
     }
     public function getPhoneNumbers()
@@ -95,7 +95,7 @@ class AttributeController extends Controller
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
         
         return response()->json([
-            'message' => 'تم تعديل ارقام التواصل بنجاح',
+            'message' => ' تم تعديل ارقام التواصل بنجاح',
         ],200);
     }
     
@@ -116,7 +116,7 @@ class AttributeController extends Controller
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
         
         return response()->json([
-            'message' => 'تم تعديل سعرالطلبيةالمخزنة بنجاح',
+            'message' => ' تم تعديل سعرالطلبيةالمخزنة بنجاح',
         ],200);
     }
     public function getPrices()
@@ -144,7 +144,7 @@ class AttributeController extends Controller
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
         
         return response()->json([
-            'message' => 'تم تعديل سعر الطلبية المستعجلة بنجاح',
+            'message' => ' تم تعديل سعر الطلبية المستعجلة بنجاح',
         ],200);
     }
     
@@ -167,7 +167,7 @@ class AttributeController extends Controller
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
     
         return response()->json([
-            'message' => $config['isActive'] ? 'التطبيق قيد العمل ' : 'التطبيق في حالة صيانة',
+            'message' => $config['isActive'] ? ' التطبيق قيد العمل ' : ' التطبيق في حالة صيانة',
         ],200);
     }
 }

@@ -166,18 +166,18 @@ class ProductController extends Controller
   
         $sukerProducts = Product::where('type', $type)->with('classification')->get();
 
-        if ($sukerProducts->isEmpty()) {
-            return response()->json([
-                'message' => trans('product.noProduct'),
-            ], 404);
-        }
-    
+        if ($sukerProducts->isNotEmpty()) {
 
-        $sukerProducts->transform(function ($sukerProduct) {
-            $sukerProduct->images = json_decode($sukerProduct->images);
-            return $sukerProduct;
-        });
-    
+            $sukerProducts->transform(function ($sukerProduct) {
+                $sukerProduct->images = json_decode($sukerProduct->images);
+                return $sukerProduct;
+            });
+        
+      
+            return response()->json([
+                'the_product' => $sukerProducts,
+            ], 200);
+        }
   
         return response()->json([
             'the_product' => $sukerProducts,
