@@ -15,24 +15,7 @@ class AuthenticationController extends Controller
 
 
     public function firstAccount(){
-        User::create(
-            [
-                'name'=>'Admin1',
-                'phone'=> '0948347729',
-                'password'=> bcrypt('123456789'),
-                'role'=> '0',
-            ]);
-            User::create(
-            [
-                'name'=>'abd',
-                'phone'=> '0943959774',
-                'password'=> bcrypt('123456789'),
-                'role'=> '1',
-                'nameOfStore'=>'agkerde',
-                'adress'=>'damas',
-                'classification_id'=>'1',
-                'is_verified'=>true,
-            ]);
+  
             Classification::create([
                 'name'=>'فندق'
             ]);
@@ -46,6 +29,24 @@ class AuthenticationController extends Controller
             Classification::create([
                 'name'=>'سوبر ماركت'
             ]);
+            User::create(
+                [
+                    'name'=>'Admin1',
+                    'phone'=> '0948347729',
+                    'password'=> bcrypt('123456789'),
+                    'role'=> '0',
+                ]);
+                User::create(
+                [
+                    'name'=>'abd',
+                    'phone'=> '0943959774',
+                    'password'=> bcrypt('123456789'),
+                    'role'=> '1',
+                    'nameOfStore'=>'agkerde',
+                    'adress'=>'damas',
+                    'classification_id'=>'1',
+                    'is_verified'=>true,
+                ]);
     }
         
 
