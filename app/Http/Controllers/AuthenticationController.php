@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Models\Classification;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -13,6 +13,41 @@ use UltraMsg\WhatsAppApi;
 class AuthenticationController extends Controller
 {
 
+
+    public function firstAccount(){
+        User::create(
+            [
+                'name'=>'Admin1',
+                'phone'=> '0948347729',
+                'password'=> bcrypt('123456789'),
+                'role'=> '0',
+            ]);
+            User::create(
+            [
+                'name'=>'abd',
+                'phone'=> '0943959774',
+                'password'=> bcrypt('123456789'),
+                'role'=> '1',
+                'nameOfStore'=>'agkerde',
+                'adress'=>'damas',
+                'classification_id'=>'1',
+                'is_verified'=>true,
+            ]);
+            Classification::create([
+                'name'=>'فندق'
+            ]);
+        
+        
+        
+            Classification::create([
+                'name'=>'مطعم'
+            ]);
+        
+            Classification::create([
+                'name'=>'سوبر ماركت'
+            ]);
+    }
+        
 
     public function register(Request $request)
     {

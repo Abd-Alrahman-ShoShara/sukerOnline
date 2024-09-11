@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Route;
 
 
 
+Route::post('/firstAccount', [AuthenticationController::class, 'firstAccount']);
 Route::post('/register', [AuthenticationController::class, 'register']);
 
 Route::post('/verifyCode', [AuthenticationController::class, 'verifyCode']);
