@@ -54,8 +54,8 @@ class AuthenticationController extends Controller
         $user->save();
     
         $this->sendCode($user->phone, $code, $user->name);
-
-        if (Carbon::now()->isStartOfMonth()) {
+        $today = Carbon::today();
+        if ($today->day === 1) {
 
             $dateThreeDaysAgo = Carbon::now()->subDays(3);
             $deletedUsersCount = User::where('is_verified', false)
@@ -258,7 +258,6 @@ public function resendCode(Request $request)
         $user->type = $user->role == 0 ? 'admin' : 'user';
     
         $token = $user->createToken('auth_token')->accessToken;
-        
 
         return response()->json([
             'user' => $user,
