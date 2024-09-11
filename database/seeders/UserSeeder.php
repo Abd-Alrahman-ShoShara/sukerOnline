@@ -30,6 +30,7 @@ class UserSeeder extends Seeder
                 'nameOfStore'=>'agkerde',
                 'adress'=>'damas',
                 'classification_id'=>'1',
+                'is_verified'=>true,
             ]);
     }
 }

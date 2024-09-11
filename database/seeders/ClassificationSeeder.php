@@ -17,9 +17,7 @@ class ClassificationSeeder extends Seeder
             'name'=>'فندق'
         ]);
     
-        Classification::create([
-            'name'=>'سينما'
-        ]);
+    
     
         Classification::create([
             'name'=>'مطعم'
