@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('pointsOrders_id');
             $table->foreign('pointsOrders_id')->references('id')->on('points_orders')->onDelete('cascade');
             $table->unsignedBigInteger('pointsProduct_id');
-            $table->foreign('pointsProduct_id')->references('id')->on('Points_products')->onDelete('cascade');
+            $table->foreign('pointsProduct_id')->references('id')->on('points_products')->onDelete('cascade');
             $table->bigInteger('quantity')->default(0);
             $table->timestamps();
         });
