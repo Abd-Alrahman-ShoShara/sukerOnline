@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use UltraMsg\WhatsAppApi;
 
 class AuthenticationController extends Controller
@@ -52,57 +53,67 @@ class AuthenticationController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate([
-            'name' => 'required|max:255',
-            'phone' => 'required|regex:/^[0-9]+$/',
-            'password' => 'required|min:6|confirmed',
-            'nameOfStore' => 'required',
-            'classification_id' => 'required',
-            'adress' => 'required',
-            'fcm_token' => 'required',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required|max:255',
+                'phone' => 'required|regex:/^[0-9]+$/',
+                'password' => 'required|min:6|confirmed',
+                'nameOfStore' => 'required',
+                'classification_id' => 'required',
+                'adress' => 'required',
+                'fcm_token' => 'required',
+            ]);
     
-        // Check if the phone number already exists and is verified
-        $existingUser = User::where('phone', $request->phone)->first();
+            // Check if the phone number already exists and is verified
+            $existingUser = User::where('phone', $request->phone)->first();
     
-        if ($existingUser && $existingUser->is_verified) {
+            if ($existingUser && $existingUser->is_verified) {
+                return response([
+                    'message' => trans('auth.already_verified'),
+                ], 400);
+            }
+    
+            // Create or update the user if not verified
+            $user = User::updateOrCreate(
+                ['phone' => $request->phone],
+                [
+                    'name' => $request->name,
+                    'password' => Hash::make($request->password),
+                    'adress' => $request->adress,
+                    'classification_id' => $request->classification_id,
+                    'nameOfStore' => $request->nameOfStore,
+                    'fcm_token' => $request->fcm_token,
+                    'is_verified' => false,
+                ]
+            );
+    
+            $code = mt_rand(1000, 9999);
+            $user->verification_code = $code;
+            $user->save();
+    
+            $this->sendCode($user->phone, $code, $user->name);
+    
+            // Check if today is the first day of the month
+            if (Carbon::today()->day === 1) {
+                $dateThreeDaysAgo = Carbon::now()->subDays(3);
+                User::where('is_verified', false)
+                    ->where('created_at', '<', $dateThreeDaysAgo)
+                    ->delete();
+            }
+    
             return response([
-                'message' => trans('auth.already_verified'),
-            ], 400);
+                'message' => trans('auth.registration_success'),
+                'user_id' => $user->id,
+            ], 200);
+        } catch (\Exception $e) {
+            // Log the exception for debugging
+            Log::error('Registration Error: '.$e->getMessage());
+    
+            return response([
+                'message' => trans('auth.registration_failed'), // Make sure this key exists in your translation files
+                'error' => $e->getMessage(),
+            ], 500); // Return a 500 Internal Server Error
         }
-    
-        // Create or update the user if not verified
-        $user = User::updateOrCreate(
-            ['phone' => $request->phone],
-            [
-                'name' => $request->name,
-                'password' => Hash::make($request->password),
-                'adress' => $request->adress,
-                'classification_id' => $request->classification_id,
-                'nameOfStore' => $request->nameOfStore,
-                'fcm_token' => $request->fcm_token,
-                'is_verified' => false,
-            ]
-        );
-    
-        $code = mt_rand(1000, 9999);
-        $user->verification_code = $code;
-        $user->save();
-    
-        $this->sendCode($user->phone, $code, $user->name);
-    
-        // Check if today is the first day of the month
-        // if (Carbon::today()->day === 1) {
-        //     $dateThreeDaysAgo = Carbon::now()->subDays(3);
-        //     User::where('is_verified', false)
-        //         ->where('created_at', '<', $dateThreeDaysAgo)
-        //         ->delete();
-        // }
-    
-        return response([
-            'message' => trans('auth.registration_success'),
-            'user_id' => $user->id,
-        ], 200);
     }
     /////////////////////////////////////////////////////////////////////
     function verifyCode(Request $request)
