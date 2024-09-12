@@ -1,7 +1,7 @@
 <?php
 return[
 
-'newOrder'=>'طلب جديد',
+'newOrder'=>' طلب جديد',
 'notiUrgent'=>' لديك طلبية مستعجلة',
 'cantDelete'=>' لا يمكنك الغاء الطلب',
 'delete'=>' تم الغاء الطلب بنجاح ',
