@@ -92,12 +92,12 @@ class AuthenticationController extends Controller
         $this->sendCode($user->phone, $code, $user->name);
     
         // Check if today is the first day of the month
-        if (Carbon::today()->day === 1) {
-            $dateThreeDaysAgo = Carbon::now()->subDays(3);
-            User::where('is_verified', false)
-                ->where('created_at', '<', $dateThreeDaysAgo)
-                ->delete();
-        }
+        // if (Carbon::today()->day === 1) {
+        //     $dateThreeDaysAgo = Carbon::now()->subDays(3);
+        //     User::where('is_verified', false)
+        //         ->where('created_at', '<', $dateThreeDaysAgo)
+        //         ->delete();
+        // }
     
         return response([
             'message' => trans('auth.registration_success'),
