@@ -215,24 +215,22 @@ class ProductController extends Controller
     }
 
     public function onOffProduct($product_id)
-    {
-  
-        $product = Product::find($product_id);
-        if ($product) {
-            $product->displayOrNot = !$product->displayOrNot;
-            $product->save();
-            $state = $product->displayOrNot ? trans('product.onProduct') :trans('product.offProduct');
-            return response()->json([
-                'message' => $state,
-            ]);
-        } else {
-    
-            return response()->json([
-                'message' => trans('product.noProduct'),
-            ]);
-        }
-    }
-    
+{
+    // Use findOrFail to automatically handle not found cases
+    $product = Product::findOrFail($product_id);
+
+    // Toggle the display state
+    $product->displayOrNot = !$product->displayOrNot;
+    $product->save();
+
+    // Prepare response message
+    $state = $product->displayOrNot ? trans('product.onProduct') : trans('product.offProduct');
+
+    // Return success response
+    return response()->json([
+        'message' => $state,
+    ], 200); // HTTP 200 OK
+}
 
     public function searchProduct($name){
         $theProduct= Product::where('name','like','%' . $name . '%')->get();
