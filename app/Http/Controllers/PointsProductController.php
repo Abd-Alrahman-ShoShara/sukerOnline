@@ -124,29 +124,46 @@ class PointsProductController extends Controller
     }
 
     public function onOffPointsProduct($pointsProduct_id)
-    {
-        $product = PointsProduct::find($pointsProduct_id);
-        if ($product) {
-            $product->displayOrNot = !$product->displayOrNot;
-            $product->save();
-            if($product->displayOrNot){
-                $users=User::where([['role','1'],['is_verified',true]])->get();
-                foreach($users as $user){
-                    $notificationController = new NotificationController(new FirebaseService()); 
-                    $notificationController->sendPushNotification($user->fcm_token,trans('product.Product'), trans('product.newProduct'),['NewpointsProduct_id'=>$pointsProduct_id]); 
-                }
+{
+    try {
+        // Use findOrFail to handle not found cases
+        $product = PointsProduct::findOrFail($pointsProduct_id);
+
+        // Toggle the display state
+        $product->displayOrNot = !$product->displayOrNot;
+        $product->save();
+
+        // Send notifications if the product is now displayed
+        if ($product->displayOrNot) {
+            $fcmTokens = User::where([['role', '1'], ['is_verified', true]])
+                ->pluck('fcm_token');
+
+            foreach ($fcmTokens as $token) {
+                $notificationController = new NotificationController(new FirebaseService());
+                $notificationController->sendPushNotification(
+                    $token,
+                    trans('product.Product'),
+                    trans('product.newProduct'),
+                    ['NewpointsProduct_id' => $pointsProduct_id]
+                );
             }
-            $state = $product->displayOrNot ? trans('product.onProduct') : trans('product.offProduct');
-            return response()->json([
-                'message' => $state,
-            ]);
-        } else {
-    
-            return response()->json([
-                'message' =>trans('product.noProduct'),
-            ]);
         }
+
+        // Prepare response message
+        $state = $product->displayOrNot ? trans('product.onProduct') : trans('product.offProduct');
+
+        // Return success response
+        return response()->json([
+            'message' => $state,
+        ], 200); // HTTP 200 OK
+
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        // Handle not found case
+        return response()->json([
+            'message' => trans('product.noProduct'),
+        ], 404); // HTTP 404 Not Found
     }
+}
     public function PointsProducts()
     {
         $PointsProducts = PointsProduct::where('displayOrNot',true)->get();
