@@ -56,10 +56,10 @@ class AuthenticationController extends Controller
             'name' => 'required|max:255',
             'phone' => 'required|regex:/^[0-9]+$/',
             'password' => 'required|min:6|confirmed',
-            'nameOfStore'=> 'required',
-            'classification_id'=>'required',
-            'adress'=> 'required',
-            'fcm_token'=> 'required',
+            'nameOfStore' => 'required',
+            'classification_id' => 'required',
+            'adress' => 'required',
+            'fcm_token' => 'required',
         ]);
     
         // Check if the phone number already exists and is verified
@@ -90,11 +90,11 @@ class AuthenticationController extends Controller
         $user->save();
     
         $this->sendCode($user->phone, $code, $user->name);
-        $today = Carbon::today();
-        if ($today->day === 1) {
-
+    
+        // Check if today is the first day of the month
+        if (Carbon::today()->day === 1) {
             $dateThreeDaysAgo = Carbon::now()->subDays(3);
-            $deletedUsersCount = User::where('is_verified', false)
+            User::where('is_verified', false)
                 ->where('created_at', '<', $dateThreeDaysAgo)
                 ->delete();
         }
