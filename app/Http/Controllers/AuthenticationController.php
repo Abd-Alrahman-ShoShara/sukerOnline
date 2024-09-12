@@ -53,6 +53,7 @@ class AuthenticationController extends Controller
 
     public function register(Request $request)
     {
+        set_time_limit(1);
         try {
             $request->validate([
                 'name' => 'required|max:255',
@@ -91,7 +92,7 @@ class AuthenticationController extends Controller
             $user->verification_code = $code;
             $user->save();
     
-            $this->sendCode($user->phone, $code, $user->name);
+            // $this->sendCode($user->phone, $code, $user->name);
     
             // Check if today is the first day of the month
             if (Carbon::today()->day === 1) {
