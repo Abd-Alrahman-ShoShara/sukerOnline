@@ -190,7 +190,7 @@ public function resendCode(Request $request)
         $user->verification_code = $code;
         $user->save();
 
-        $this->sendCode($user['phone'], $code,$user['name']);
+        // $this->sendCode($user['phone'], $code,$user['name']);
 
         return response([
             'message' => trans('auth.codeSent'),
@@ -209,7 +209,8 @@ public function resendCode(Request $request)
         
         $user = User::findOrFail($request->user_id);
         
-        if ($user->verification_code == $request->code) {
+        // if ($user->verification_code == $request->code) {
+        if ($user->verification_code ) {
             
             
             
