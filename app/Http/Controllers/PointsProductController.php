@@ -10,6 +10,7 @@ use App\Services\FirebaseService;
 
 use App\Notifications\FirebasePushNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PointsProductController extends Controller
 {
@@ -127,43 +128,50 @@ class PointsProductController extends Controller
 
     public function onOffPointsProduct($pointsProduct_id)
     {
-        // Find the product; this will throw an exception if not found
-        $product = PointsProduct::findOrFail($pointsProduct_id);
+        try {
+            // Find the product; this will throw an exception if not found
+            $product = PointsProduct::findOrFail($pointsProduct_id);
     
-        // Toggle the display state
-        $product->displayOrNot = !$product->displayOrNot;
-        $product->save();
+            // Toggle the display state
+            $product->displayOrNot = !$product->displayOrNot;
+            $product->save();
     
-        // Check if the product is now displayed
-        if ($product->displayOrNot==true) {
-            // Fetch FCM tokens of users to notify
-            $fcmTokens = DB::table('users') 
-            ->where('role', '1')
-            ->where('is_verified', true)
-            ->pluck('fcm_token')
-            ->toArray(); 
+            // Check if the product is now displayed
+            if ($product->displayOrNot) {
+                // Fetch FCM tokens of users to notify
+                $fcmTokens = DB::table('users')
+                    ->where('role', '1')
+                    ->where('is_verified', true)
+                    ->pluck('fcm_token')
+                    ->toArray();
     
-            // Send notifications to each token
-            if (!empty($fcmTokens)) {
-                $notificationController = new NotificationController(new FirebaseService());
-                foreach ($fcmTokens as $token) {
-                    $notificationController->sendPushNotification(
-                        $token,
-                        trans('product.Product'),
-                        trans('product.newProduct'),
-                        ['NewpointsProduct_id' => $pointsProduct_id]
-                    );
+                // Send notifications to each token
+                if (!empty($fcmTokens)) {
+                    $notificationController = new NotificationController(new FirebaseService());
+                    foreach ($fcmTokens as $token) {
+                        $notificationController->sendPushNotification(
+                            $token,
+                            trans('product.Product'),
+                            trans('product.newProduct'),
+                            ['NewpointsProduct_id' => $pointsProduct_id]
+                        );
+                    }
                 }
             }
+    
+            $state = $product->displayOrNot ? trans('product.onProduct') : trans('product.offProduct');
+    
+            return response()->json([
+                'message' => $state,
+            ]);
+        } catch (\Exception $e) {
+            // Log the exception message for debugging
+            Log::error('Error toggling product display: ' . $e->getMessage());
+    
+            return response()->json([
+                'message' => trans('product.errorOccurred'),
+            ], 500);
         }
-    
-        // Prepare response message
-        $state = $product->displayOrNot ? trans('product.onProduct') : trans('product.offProduct');
-    
-        // Return success response
-        return response()->json([
-            'message' => $state,
-        ], 200); // HTTP 200 OK
     }
     public function PointsProducts()
     {
