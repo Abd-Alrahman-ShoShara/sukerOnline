@@ -125,56 +125,42 @@ class PointsProductController extends Controller
 
     public function onOffPointsProduct($pointsProduct_id)
     {
-        try {
-            // Use findOrFail to handle not found cases
-            $product = PointsProduct::findOrFail($pointsProduct_id);
+        // Find the product; this will throw an exception if not found
+        $product = PointsProduct::findOrFail($pointsProduct_id);
     
-            // Toggle the display state
-            $product->displayOrNot = !$product->displayOrNot;
-            $product->save();
+        // Toggle the display state
+        $product->displayOrNot = !$product->displayOrNot;
+        $product->save();
     
-            // Check if the product is now displayed
-            if ($product->displayOrNot) {
-                // Fetch FCM tokens of users to notify
-                $fcmTokens = User::where([
-                    ['role', '1'],
-                    ['is_verified', true]
-                ])->pluck('fcm_token')->toArray(); // Convert to array for easier processing
+        // Check if the product is now displayed
+        if ($product->displayOrNot) {
+            // Fetch FCM tokens of users to notify
+            $fcmTokens = User::where([
+                ['role', '1'],
+                ['is_verified', true]
+            ])->pluck('fcm_token')->toArray(); // Convert to array for easier processing
     
-                // Send notifications to each token
-                if (!empty($fcmTokens)) {
-                    $notificationController = new NotificationController(new FirebaseService());
-                    foreach ($fcmTokens as $token) {
-                        $notificationController->sendPushNotification(
-                            $token,
-                            trans('product.Product'),
-                            trans('product.newProduct'),
-                            ['NewpointsProduct_id' => $pointsProduct_id]
-                        );
-                    }
+            // Send notifications to each token
+            if (!empty($fcmTokens)) {
+                $notificationController = new NotificationController(new FirebaseService());
+                foreach ($fcmTokens as $token) {
+                    $notificationController->sendPushNotification(
+                        $token,
+                        trans('product.Product'),
+                        trans('product.newProduct'),
+                        ['NewpointsProduct_id' => $pointsProduct_id]
+                    );
                 }
             }
-    
-            // Prepare response message
-            $state = $product->displayOrNot ? trans('product.onProduct') : trans('product.offProduct');
-    
-            // Return success response
-            return response()->json([
-                'message' => $state,
-            ], 200); // HTTP 200 OK
-    
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Handle not found case
-            return response()->json([
-                'message' => trans('product.noProduct'),
-            ], 404); // HTTP 404 Not Found
-        } catch (\Exception $e) {
-            // Handle other exceptions (optional)
-            return response()->json([
-                'message' => trans('product.errorSendingNotification'),
-                'error' => $e->getMessage(),
-            ], 500); // HTTP 500 Internal Server Error
         }
+    
+        // Prepare response message
+        $state = $product->displayOrNot ? trans('product.onProduct') : trans('product.offProduct');
+    
+        // Return success response
+        return response()->json([
+            'message' => $state,
+        ], 200); // HTTP 200 OK
     }
     public function PointsProducts()
     {
