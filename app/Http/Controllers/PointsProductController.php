@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\URL;
 use App\Services\FirebaseService;
 
 use App\Notifications\FirebasePushNotification;
+use Illuminate\Support\Facades\DB;
+
 class PointsProductController extends Controller
 {
     public function AddPointsProduct(Request $request)
@@ -135,10 +137,11 @@ class PointsProductController extends Controller
         // Check if the product is now displayed
         if ($product->displayOrNot) {
             // Fetch FCM tokens of users to notify
-            $fcmTokens = User::where([
-                ['role', '1'],
-                ['is_verified', true]
-            ])->pluck('fcm_token')->toArray(); // Convert to array for easier processing
+            $fcmTokens = DB::table('users') 
+            ->where('role', '1')
+            ->where('is_verified', true)
+            ->pluck('fcm_token')
+            ->toArray(); 
     
             // Send notifications to each token
             if (!empty($fcmTokens)) {
