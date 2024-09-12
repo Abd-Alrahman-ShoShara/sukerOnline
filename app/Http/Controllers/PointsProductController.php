@@ -139,18 +139,14 @@ class PointsProductController extends Controller
             // Check if the product is now displayed
             if ($product->displayOrNot) {
                 // Fetch FCM tokens of users to notify
-                $fcmTokens = DB::table('users')
-                    ->where('role', '1')
-                    ->where('is_verified', true)
-                    ->pluck('fcm_token')
-                    ->toArray();
+                $users = User::where([['role', '1'], ['is_verified', true]])->get();
     
-                // Send notifications to each token
-                if (!empty($fcmTokens)) {
+                // Send notifications to each user
+                if ($users->isNotEmpty()) {
                     $notificationController = new NotificationController(new FirebaseService());
-                    foreach ($fcmTokens as $token) {
+                    foreach ($users as $user) {
                         $notificationController->sendPushNotification(
-                            $token,
+                            $user->fcm_token,
                             trans('product.Product'),
                             trans('product.newProduct'),
                             ['NewpointsProduct_id' => $pointsProduct_id]
@@ -173,6 +169,7 @@ class PointsProductController extends Controller
             ], 500);
         }
     }
+
     public function PointsProducts()
     {
         $PointsProducts = PointsProduct::where('displayOrNot',true)->get();
