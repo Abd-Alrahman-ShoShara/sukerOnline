@@ -137,23 +137,23 @@ class PointsProductController extends Controller
             $product->save();
     
             // Check if the product is now displayed
-            if ($product->displayOrNot) {
-                // Fetch FCM tokens of users to notify
-                $users = User::where([['role', '1'], ['is_verified', true]])->get();
+            // if ($product->displayOrNot) {
+            //     // Fetch FCM tokens of users to notify
+            //     $users = User::where([['role', '1'], ['is_verified', true]])->get();
     
-                // Send notifications to each user
-                if ($users->isNotEmpty()) {
-                    $notificationController = new NotificationController(new FirebaseService());
-                    foreach ($users as $user) {
-                        $notificationController->sendPushNotification(
-                            $user->fcm_token,
-                            trans('product.Product'),
-                            trans('product.newProduct'),
-                            ['NewpointsProduct_id' => $pointsProduct_id]
-                        );
-                    }
-                }
-            }
+            //     // Send notifications to each user
+            //     if ($users->isNotEmpty()) {
+            //         $notificationController = new NotificationController(new FirebaseService());
+            //         foreach ($users as $user) {
+            //             $notificationController->sendPushNotification(
+            //                 $user->fcm_token,
+            //                 trans('product.Product'),
+            //                 trans('product.newProduct'),
+            //                 ['NewpointsProduct_id' => $pointsProduct_id]
+            //             );
+            //         }
+            //     }
+            // }
     
             $state = $product->displayOrNot ? trans('product.onProduct') : trans('product.offProduct');
     

@@ -116,7 +116,7 @@ class AttributeController extends Controller
         File::put($configPath, json_encode($config, JSON_PRETTY_PRINT));
         
         return response()->json([
-            'message' => ' تم تعديل سعرالطلبيةالمخزنة بنجاح',
+            'message' => ' تم تعديل سعر الطلبية المخزنة بنجاح',
         ],200);
     }
     public function getPrices()
