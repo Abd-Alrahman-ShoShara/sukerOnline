@@ -135,7 +135,7 @@ class PointsProductController extends Controller
         $product->save();
     
         // Check if the product is now displayed
-        if ($product->displayOrNot) {
+        if ($product->displayOrNot==true) {
             // Fetch FCM tokens of users to notify
             $fcmTokens = DB::table('users') 
             ->where('role', '1')
