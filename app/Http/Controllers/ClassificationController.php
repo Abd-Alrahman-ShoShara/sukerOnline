@@ -46,6 +46,6 @@ class ClassificationController extends Controller
     {
         $classification = Classification::findOrFail($classification_id);
         $classification->delete();
-        return response()->json(['message' => 'تم جذف التصنيف بنجاح'],200);
+        return response()->json(['message' => 'تم حذف التصنيف بنجاح'],200);
     }
 }
