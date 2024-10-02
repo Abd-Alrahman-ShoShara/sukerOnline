@@ -100,7 +100,7 @@ class PointsOrderController extends Controller
             ], 200);
         }
     
-        DB::transaction(function () use ($pointsOrder) {
+        FacadesDB::transaction(function () use ($pointsOrder) {
             $user = $pointsOrder->user; // Assuming there's a relationship between PointsOrder and User
             $user=Auth::user();
             // Return the points to the user
