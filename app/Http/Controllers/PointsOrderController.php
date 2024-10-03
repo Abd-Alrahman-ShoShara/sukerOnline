@@ -74,20 +74,38 @@ class PointsOrderController extends Controller
 
     public function pointsOrderDetails($pointsOrder_id)
     {
-        $pointsOrder = PointsOrder::with('pointCarts.pointsProduct:id,name,price')
-            ->whereId($pointsOrder_id)
-            ->first();
-
+        $pointsOrder = PointsOrder::with(['pointCarts.pointsProduct' => function ($query) {
+            $query->withTrashed(); // Include soft-deleted products
+        }])
+        ->whereId($pointsOrder_id)
+        ->first();
+    
         if (!$pointsOrder) {
             return response()->json([
                 'message' => trans('normalOrder.noOrder'),
             ], 404);
         }
-
+    
         return response()->json([
             'pointsOrder' => $pointsOrder
         ], 200);
     }
+    // public function pointsOrderDetails($pointsOrder_id)
+    // {
+    //     $pointsOrder = PointsOrder::with('pointCarts.pointsProduct:id,name,price')
+    //         ->whereId($pointsOrder_id)
+    //         ->first();
+
+    //     if (!$pointsOrder) {
+    //         return response()->json([
+    //             'message' => trans('normalOrder.noOrder'),
+    //         ], 404);
+    //     }
+
+    //     return response()->json([
+    //         'pointsOrder' => $pointsOrder
+    //     ], 200);
+    // }
 
     public function deletePointsOrder($pointsOrder_id)
     {

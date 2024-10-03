@@ -19,8 +19,8 @@ return new class extends Migration
             $table->string('images');
             $table->integer('quantity')->default(0);
             $table->boolean('displayOrNot')->default(false);
-        
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
