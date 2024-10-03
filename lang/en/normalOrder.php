@@ -9,6 +9,7 @@ return[
 'updated'=>'updated successfully',
 'order'=>'the order',
 'preparing'=>'your order is preparing',
+'stored'=>'your order is storing',
 'stateUpdate'=>'Order status has been modified',
 'notPending'=>'The order is not pending',
 'sent'=>'Your order is being sent',

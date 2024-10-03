@@ -16,7 +16,7 @@ return new class extends Migration
             $table->BigInteger("points")->default(0);
             $table->unsignedBigInteger("user_id");
             $table->foreign("user_id")->references('id')->on("users")->onDelete('cascade');
-            $table->enum('state',['pending','preparing','sent','received'])->default('pending');
+            $table->enum('state',['pending','stored','preparing','sent','received'])->default('pending');
             $table->enum('type',['urgent','regular','stored'])->default('regular');
             $table->double('totalPrice')->default(0);
             $table->timestamps();
