@@ -22,6 +22,7 @@ return new class extends Migration
             $table->boolean('is_public')->default(false);
             $table->boolean('displayOrNot')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

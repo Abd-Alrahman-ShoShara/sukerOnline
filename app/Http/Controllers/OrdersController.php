@@ -134,12 +134,25 @@ class OrdersController extends Controller
 
 public function orderDetails($order_id)
 {
-    $order = Order::where('id', $order_id)->with('carts.product:id,name,price','storedOrders')->first();
-
+    $order = Order::where('id', $order_id)
+    ->with(['carts.product' => function ($query) {
+        $query->withTrashed(); // Include soft deleted products
+    }, 'storedOrders'])
+    ->first();
     return response()->json([
         'orderDetails'=>$order,
     ], 200);
 }
+
+
+// public function orderDetails($order_id)
+// {
+//     $order = Order::where('id', $order_id)->with('carts.product:id,name,price','storedOrders')->first();
+
+//     return response()->json([
+//         'orderDetails'=>$order,
+//     ], 200);
+// }
 
 public function deleteOrder($order_id)
 {

@@ -152,7 +152,7 @@ class ProductController extends Controller
     public function deleteProduct($product_id)
     {
         $product = Product::findOrFail($product_id);
-        $product->delete();
+        $product->delete(); // This will perform a soft delete
 
 
         return response()->json(['message' => trans('product.deleteProduct')], 200);
