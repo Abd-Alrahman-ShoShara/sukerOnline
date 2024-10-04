@@ -321,8 +321,13 @@ class PointsOrderController extends Controller
 
     public function allPointsOrders()
     {
-        $pointsOrders = PointsOrder::with('users.classification','pointCarts.pointsProduct')->get();
-
+        $pointsOrders = PointsOrder::with([
+            'users.classification',
+            'pointCarts.pointsProduct' => function ($query) {
+                $query->withTrashed(); // Include soft-deleted products
+            }
+        ])->get();
+    
         if ($pointsOrders->isNotEmpty()) {
             return response()->json([
                 'Orders' => $pointsOrders
@@ -330,9 +335,23 @@ class PointsOrderController extends Controller
         } else {
             return response()->json([
                 'message' => trans('normalOrder.noOrder')
-            ]);
+            ], 404);
         }
     }
+    // public function allPointsOrders()
+    // {
+    //     $pointsOrders = PointsOrder::with('users.classification','pointCarts.pointsProduct')->get();
+
+    //     if ($pointsOrders->isNotEmpty()) {
+    //         return response()->json([
+    //             'Orders' => $pointsOrders
+    //         ], 200);
+    //     } else {
+    //         return response()->json([
+    //             'message' => trans('normalOrder.noOrder')
+    //         ]);
+    //     }
+    // }
 
     public function editStateOfPointsOrder(Request $request, $pointsOrder_id)
 {
