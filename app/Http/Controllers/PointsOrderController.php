@@ -319,6 +319,28 @@ class PointsOrderController extends Controller
         ], 200);
     }
 
+    //to show the points orders of every user
+    public function userPointsOrder($user_id)
+{
+    $pointsOrders = PointsOrder::where('user_id', $user_id)
+        ->with([
+            'pointCarts.pointsProduct' => function ($query) {
+                $query->withTrashed(); // Include soft-deleted products
+            }
+        ])
+        ->get();
+        
+    if ($pointsOrders->isNotEmpty()) {
+        return response()->json([
+            'pointsOrders' => $pointsOrders
+        ], 200);
+    } else {
+        return response()->json([
+            'message' => trans('normalOrder.noOrder')
+        ], 404);
+    }
+}
+
     public function allPointsOrders()
     {
         $pointsOrders = PointsOrder::with([

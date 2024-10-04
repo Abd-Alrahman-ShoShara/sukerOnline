@@ -122,6 +122,7 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/deletePointsOrder/{pointsOrder_id}', [PointsOrderController::class, 'deletePointsOrder'])->middleware('auth:api')->middleware('OnOffApp:api');
     Route::post('/updatePointsOrder/{pointsOrder_id}', [PointsOrderController::class, 'updatePointsOrder'])->middleware('auth:api')->middleware('OnOffApp:api');
     Route::post('/pointsOrdersOfUser', [PointsOrderController::class, 'pointsOrdersOfUser'])->middleware('auth:api');
+    Route::post('/userPointsOrder/{user_id}', [PointsOrderController::class, 'userPointsOrder'])->middleware('auth:api');
 
     Route::post('/editStateOfPointsOrder/{PointsOrder_id}', [PointsOrderController::class, 'editStateOfPointsOrder']);
 
