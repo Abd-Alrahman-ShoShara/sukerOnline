@@ -323,7 +323,7 @@ public function editStateOfOrder(Request $request, $order_id)
                     ]);
                 } else {
                     return response()->json([
-                        'message' => trans('normalOrder.notPending')
+                        'message' => trans('normalOrder.notPreparing')
                     ], 403);
                 }
             default:
