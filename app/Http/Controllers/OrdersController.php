@@ -285,7 +285,7 @@ public function editStateOfOrder(Request $request, $order_id)
                     ], 403);
                 }
             case 'sent':
-                if ($order->state == 'preparing') {
+                if ($order->state == 'preparing' || $order->state == 'stored') {
                     $order->update(['state' => $request->input('state')]);
                   
                     $notificationController = new NotificationController(new FirebaseService()); 
@@ -313,7 +313,7 @@ public function editStateOfOrder(Request $request, $order_id)
                     ], 403);
                 }
             case 'stored':
-                if ($order->state == 'pending') {
+                if ($order->state == 'preparing') {
     
                     $order->update(['state' => $request->input('state')]);
                     $notificationController = new NotificationController(new FirebaseService()); 
