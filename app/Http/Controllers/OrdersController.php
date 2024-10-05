@@ -608,7 +608,7 @@ public function allOrders(Request $request)
 {
     $attrs = $request->validate([
         'type' => 'required|in:urgent,regular,stored',
-        'sortBy' => 'sometimes|in:pending,preparing,sent,received',
+        'sortBy' => 'sometimes|in:pending,preparing,sent,received,stored',
     ]);
 
     $query = Order::query();
