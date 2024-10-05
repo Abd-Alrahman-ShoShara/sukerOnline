@@ -330,15 +330,11 @@ class PointsOrderController extends Controller
         ])
         ->get();
         
-    if ($pointsOrders->isNotEmpty()) {
+    
         return response()->json([
             'pointsOrders' => $pointsOrders
         ], 200);
-    } else {
-        return response()->json([
-            'message' => trans('normalOrder.noOrder')
-        ], 404);
-    }
+    
 }
 
     public function allPointsOrders()
