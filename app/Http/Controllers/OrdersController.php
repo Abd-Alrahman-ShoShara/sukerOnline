@@ -260,71 +260,71 @@ public function updateOrder(Request $request, $orderId)
     ]);
 }
 
-public function editStateOfOrder(Request $request, $order_id)
-{
-    $request->validate([
-        'state' => 'required|in:preparing,sent,received,stored'
-    ]);
+// public function editStateOfOrder(Request $request, $order_id)
+// {
+//     $request->validate([
+//         'state' => 'required|in:preparing,sent,received,stored'
+//     ]);
 
-    $order = Order::find($order_id);
+//     $order = Order::find($order_id);
 
-    if (!$order) {
-        return response()->json([
-            'message' => 'الطلب غير موجود'
-        ], 404);
-    }
+//     if (!$order) {
+//         return response()->json([
+//             'message' => 'الطلب غير موجود'
+//         ], 404);
+//     }
 
-    $user = User::find($order->user_id);
+//     $user = User::find($order->user_id);
 
-    if (!$user) {
-        return response()->json([
-            'message' => 'User not found'
-        ], 404);
-    }
+//     if (!$user) {
+//         return response()->json([
+//             'message' => 'User not found'
+//         ], 404);
+//     }
 
-    $notificationController = new NotificationController(new FirebaseService());
+//     $notificationController = new NotificationController(new FirebaseService());
 
-    try {
-        switch ($request->input('state')) {
-            case 'preparing':
-                if ($order->state === 'pending') {
-                    $order->update(['state' => $request->input('state')]);
-                    $notificationController->sendPushNotification($user->fcm_token, trans('normalOrder.order'), trans('normalOrder.preparing'), ['order_id' => $order_id]);
-                    return response()->json(['message' => trans('normalOrder.stateUpdate')]);
-                }
-                return response()->json(['message' => trans('normalOrder.notPending')], 403);
+//     try {
+//         switch ($request->input('state')) {
+//             case 'preparing':
+//                 if ($order->state === 'pending') {
+//                     $order->update(['state' => $request->input('state')]);
+//                     $notificationController->sendPushNotification($user->fcm_token, trans('normalOrder.order'), trans('normalOrder.preparing'), ['order_id' => $order_id]);
+//                     return response()->json(['message' => trans('normalOrder.stateUpdate')]);
+//                 }
+//                 return response()->json(['message' => trans('normalOrder.notPending')], 403);
 
-            case 'sent':
-                if ($order->state === 'preparing' || $order->state === 'stored') {
-                    $order->update(['state' => $request->input('state')]);
-                    $notificationController->sendPushNotification($user->fcm_token, trans('normalOrder.order'), trans('normalOrder.sent'), ['order_id' => $order_id]);
-                    return response()->json(['message' => trans('normalOrder.stateUpdate')]);
-                }
-                return response()->json(['message' => trans('normalOrder.notPreparing')], 403);
+//             case 'sent':
+//                 if ($order->state === 'preparing' || $order->state === 'stored') {
+//                     $order->update(['state' => $request->input('state')]);
+//                     $notificationController->sendPushNotification($user->fcm_token, trans('normalOrder.order'), trans('normalOrder.sent'), ['order_id' => $order_id]);
+//                     return response()->json(['message' => trans('normalOrder.stateUpdate')]);
+//                 }
+//                 return response()->json(['message' => trans('normalOrder.notPreparing')], 403);
 
-            case 'received':
-                if ($order->state === 'sent') {
-                    $order->update(['state' => $request->input('state')]);
-                    $notificationController->sendPushNotification($user->fcm_token, trans('normalOrder.order'), trans('normalOrder.received'), ['order_id' => $order_id]);
-                    return response()->json(['message' => trans('normalOrder.stateUpdate')]);
-                }
-                return response()->json(['message' => trans('normalOrder.notReceived')], 403);
+//             case 'received':
+//                 if ($order->state === 'sent') {
+//                     $order->update(['state' => $request->input('state')]);
+//                     $notificationController->sendPushNotification($user->fcm_token, trans('normalOrder.order'), trans('normalOrder.received'), ['order_id' => $order_id]);
+//                     return response()->json(['message' => trans('normalOrder.stateUpdate')]);
+//                 }
+//                 return response()->json(['message' => trans('normalOrder.notReceived')], 403);
 
-            case 'stored':
-                if ($order->state === 'preparing') {
-                    $order->update(['state' => $request->input('state')]);
-                    $notificationController->sendPushNotification($user->fcm_token, trans('normalOrder.order'), trans('normalOrder.stored'), ['order_id' => $order_id]);
-                    return response()->json(['message' => trans('normalOrder.stateUpdate')]);
-                }
-                return response()->json(['message' => trans('normalOrder.notPreparing')], 403);
+//             case 'stored':
+//                 if ($order->state === 'preparing') {
+//                     $order->update(['state' => $request->input('state')]);
+//                     $notificationController->sendPushNotification($user->fcm_token, trans('normalOrder.order'), trans('normalOrder.stored'), ['order_id' => $order_id]);
+//                     return response()->json(['message' => trans('normalOrder.stateUpdate')]);
+//                 }
+//                 return response()->json(['message' => trans('normalOrder.notPreparing')], 403);
 
-            default:
-                return response()->json(['message' => 'Invalid state'], 403);
-        }
-    } catch (\Exception $e) {
-        return response()->json(['message' => 'Internal server error: ' . $e->getMessage()], 500);
-    }
-}
+//             default:
+//                 return response()->json(['message' => 'Invalid state'], 403);
+//         }
+//     } catch (\Exception $e) {
+//         return response()->json(['message' => 'Internal server error: ' . $e->getMessage()], 500);
+//     }
+// }
 // public function editStateOfOrder(Request $request, $order_id)
 // {
 //     $request->validate([
@@ -404,69 +404,69 @@ public function editStateOfOrder(Request $request, $order_id)
 // }
 
 
-// public function editStateOfOrder(Request $request, $order_id)
-// {
-//     $request->validate([
-//         'state' => 'required|in:preparing,sent,received'
-//     ]);
+public function editStateOfOrder(Request $request, $order_id)
+{
+    $request->validate([
+        'state' => 'required|in:preparing,sent,received'
+    ]);
 
-//     $order = Order::find($order_id);
-//     $user=User::find($order->user_id);
-//     if ($order) {
-//         switch ($request->input('state')) {
-//             case 'preparing':
-//                 if ($order->state == 'pending') {
+    $order = Order::find($order_id);
+    $user=User::find($order->user_id);
+    if ($order) {
+        switch ($request->input('state')) {
+            case 'preparing':
+                if ($order->state == 'pending') {
 
-//                     $order->update(['state' => $request->input('state')]);
-//                     $notificationController = new NotificationController(new FirebaseService()); 
-//                     $notificationController->sendPushNotification($user->fcm_token,trans('normalOrder.order'),trans('normalOrder.preparing'),['order_id'=>$order_id]); 
-//                             return response()->json([
-//                         'message' => trans('normalOrder.stateUpdate')
-//                     ]);
-//                 } else {
-//                     return response()->json([
-//                         'message' => trans('normalOrder.notPending')
-//                     ], 403);
-//                 }
-//             case 'sent':
-//                 if ($order->state == 'preparing') {
-//                     $order->update(['state' => $request->input('state')]);
+                    $order->update(['state' => $request->input('state')]);
+                    $notificationController = new NotificationController(new FirebaseService()); 
+                    $notificationController->sendPushNotification($user->fcm_token,trans('normalOrder.order'),trans('normalOrder.preparing'),['order_id'=>$order_id]); 
+                            return response()->json([
+                        'message' => trans('normalOrder.stateUpdate')
+                    ]);
+                } else {
+                    return response()->json([
+                        'message' => trans('normalOrder.notPending')
+                    ], 403);
+                }
+            case 'sent':
+                if ($order->state == 'preparing') {
+                    $order->update(['state' => $request->input('state')]);
                   
-//                     $notificationController = new NotificationController(new FirebaseService()); 
-//                     $notificationController->sendPushNotification($user->fcm_token,trans('normalOrder.order'),trans('normalOrder.sent'),['order_id'=>$order_id]);
-//                     return response()->json([
-//                         'message' => trans('normalOrder.stateUpdate')
-//                     ]);
-//                 } else {
-//                     return response()->json([
-//                         'message' =>trans('normalOrder.notPreparing')
-//                     ], 403);
-//                 }
-//             case 'received':
-//                 if ($order->state == 'sent') {
-//                     $order->update(['state' => $request->input('state')]);
+                    $notificationController = new NotificationController(new FirebaseService()); 
+                    $notificationController->sendPushNotification($user->fcm_token,trans('normalOrder.order'),trans('normalOrder.sent'),['order_id'=>$order_id]);
+                    return response()->json([
+                        'message' => trans('normalOrder.stateUpdate')
+                    ]);
+                } else {
+                    return response()->json([
+                        'message' =>trans('normalOrder.notPreparing')
+                    ], 403);
+                }
+            case 'received':
+                if ($order->state == 'sent') {
+                    $order->update(['state' => $request->input('state')]);
 
-//                     $notificationController = new NotificationController(new FirebaseService()); 
-//                     $notificationController->sendPushNotification($user->fcm_token,trans('normalOrder.order'),trans('normalOrder.received'),['order_id'=>$order_id]);                
-//                         return response()->json([
-//                         'message' => trans('normalOrder.stateUpdate')
-//                     ]);
-//                 } else {
-//                     return response()->json([
-//                         'message' => trans('normalOrder.notReceived')
-//                     ], 403);
-//                 }
-//             default:
-//                 return response()->json([
-//                     'message' => 'Invalid state'
-//                 ], 403);
-//         }
-//     } else {
-//         return response()->json([
-//             'message' => 'الطلب غير موجود'
-//         ], 404);
-//     }
-// }
+                    $notificationController = new NotificationController(new FirebaseService()); 
+                    $notificationController->sendPushNotification($user->fcm_token,trans('normalOrder.order'),trans('normalOrder.received'),['order_id'=>$order_id]);                
+                        return response()->json([
+                        'message' => trans('normalOrder.stateUpdate')
+                    ]);
+                } else {
+                    return response()->json([
+                        'message' => trans('normalOrder.notReceived')
+                    ], 403);
+                }
+            default:
+                return response()->json([
+                    'message' => 'Invalid state'
+                ], 403);
+        }
+    } else {
+        return response()->json([
+            'message' => 'الطلب غير موجود'
+        ], 404);
+    }
+}
 
 public function reportUserOrders(Request $request)
     {
