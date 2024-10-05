@@ -89,7 +89,7 @@ class OrdersController extends Controller
             'message'=>trans('Complaints.Created'),
             'theOrder' => $order,
 
-        ]);
+        ],200);
     }
 
     public function createExtraOrder(Request $request)
@@ -290,7 +290,7 @@ public function editStateOfOrder(Request $request, $order_id)
                 if ($order->state === 'pending') {
                     $order->update(['state' => $request->input('state')]);
                     $notificationController->sendPushNotification($user->fcm_token, trans('normalOrder.order'), trans('normalOrder.preparing'), ['order_id' => $order_id]);
-                    return response()->json(['message' => trans('normalOrder.stateUpdate')]);
+                    return response()->json(['message' => trans('normalOrder.stateUpdate')],200);
                 }
                 return response()->json(['message' => trans('normalOrder.notPending')], 403);
 
@@ -298,7 +298,7 @@ public function editStateOfOrder(Request $request, $order_id)
                 if ($order->state === 'preparing' || $order->state === 'stored') {
                     $order->update(['state' => $request->input('state')]);
                     $notificationController->sendPushNotification($user->fcm_token, trans('normalOrder.order'), trans('normalOrder.sent'), ['order_id' => $order_id]);
-                    return response()->json(['message' => trans('normalOrder.stateUpdate')]);
+                    return response()->json(['message' => trans('normalOrder.stateUpdate')],200);
                 }
                 return response()->json(['message' => trans('normalOrder.notPreparing')], 403);
 
@@ -306,7 +306,7 @@ public function editStateOfOrder(Request $request, $order_id)
                 if ($order->state === 'sent') {
                     $order->update(['state' => $request->input('state')]);
                     $notificationController->sendPushNotification($user->fcm_token, trans('normalOrder.order'), trans('normalOrder.received'), ['order_id' => $order_id]);
-                    return response()->json(['message' => trans('normalOrder.stateUpdate')]);
+                    return response()->json(['message' => trans('normalOrder.stateUpdate')],200);
                 }
                 return response()->json(['message' => trans('normalOrder.notReceived')], 403);
 
@@ -314,7 +314,7 @@ public function editStateOfOrder(Request $request, $order_id)
                 if ($order->state === 'preparing') {
                     $order->update(['state' => $request->input('state')]);
                     $notificationController->sendPushNotification($user->fcm_token, trans('normalOrder.order'), trans('normalOrder.stored'), ['order_id' => $order_id]);
-                    return response()->json(['message' => trans('normalOrder.stateUpdate')]);
+                    return response()->json(['message' => trans('normalOrder.stateUpdate')],200);
                 }
                 return response()->json(['message' => trans('normalOrder.notPreparing')], 403);
 
