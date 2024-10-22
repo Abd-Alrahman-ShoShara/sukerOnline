@@ -621,9 +621,20 @@ public function allOrders(Request $request)
         $query->where('state', $attrs['sortBy']);
     }
 
-    $orders = $query->with('users.classification')
-                    ->orderByDesc('created_at')
-                    ->get();
+    // $orders = $query->with('users.classification')
+    //                 ->orderByDesc('created_at')
+    //                 ->get();
+
+    // if ($attrs['type'] == 'stored') {
+    //     $orders->load('storedOrders');
+    // }
+    
+    $orders = $query->with(['users' => function($q) {
+        // Include soft-deleted users
+        $q->withTrashed();
+    }, 'users.classification'])
+    ->orderByDesc('created_at')
+    ->get();
 
     if ($attrs['type'] == 'stored') {
         $orders->load('storedOrders');

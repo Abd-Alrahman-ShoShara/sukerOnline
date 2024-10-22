@@ -22,4 +22,7 @@ return [
 
     'wrongLogin'=>'The entered information is incorrect, please try again',
     'editLang'=>'The application language has been successfully modified',
+
+    'cannotDA'=>'You have undelivered requests. You cannot delete your account.',
+    'delatedAcc'=>'Account scheduled for deletion'
 ];

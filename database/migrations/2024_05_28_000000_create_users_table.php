@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('adress')->nullable();
             $table->bigInteger('userPoints')->default(0);
             $table->unsignedBigInteger('classification_id')->nullable();
+            $table->softDeletes();
             $table->foreign('classification_id')->references('id')->on('classifications')->onDelete('cascade');            
             $table->rememberToken();
             $table->timestamps();

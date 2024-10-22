@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Route;
 /////////////////////////////////////////////Auth
 
 
+Route::post('/deleteUser', [AuthenticationController::class, 'deleteUser'])->middleware('auth:api');
 
 Route::post('/firstAccount', [AuthenticationController::class, 'firstAccount']);
 Route::post('/register', [AuthenticationController::class, 'register']);
