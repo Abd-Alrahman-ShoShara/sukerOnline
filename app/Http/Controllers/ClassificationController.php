@@ -26,19 +26,22 @@ class ClassificationController extends Controller
             'classification'=>$classicification
         ],200);
     }
-    public function allClassifications(){
+    public function allClassifications(Request $request){
+        $attr = $request->validate([
+            'language'=>'required|in:ar,en',
+        ]);
         $classicifications= Classification::all();
-        // $tr=new GoogleTranslate();
-        // foreach($classicifications as $classicification){
+        $tr=new GoogleTranslate();
+        foreach($classicifications as $classicification){
 
-        //     $name=$tr->setTarget('ar')->translate($classicification->name);
-        //     $translatedClassifications[] = [
-        //         'id' => $classicification->id,
-        //         'name' => $name,
-        //     ];
-        // }
+            $name=$tr->setTarget($request->language)->translate($classicification->name);
+            $translatedClassifications[] = [
+                'id' => $classicification->id,
+                'name' => $name,
+            ];
+        }
         return response()->json([
-            'classification'=>$classicifications,
+            'classification'=>$translatedClassifications,
         ],200);
     }
 

@@ -29,6 +29,7 @@ class User extends Authenticatable
         'nameOfStore',
         'userPoints',
         'fcm_token',
+        'language',
         
     ];
 

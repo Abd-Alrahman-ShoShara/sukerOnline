@@ -31,7 +31,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/deleteUser', [AuthenticationController::class, 'deleteUser'])->middleware('auth:api');
 
-Route::post('/firstAccount', [AuthenticationController::class, 'firstAccount']);
 Route::post('/register', [AuthenticationController::class, 'register']);
 
 Route::post('/verifyCode', [AuthenticationController::class, 'verifyCode']);
@@ -44,7 +43,7 @@ Route::post('/verifyForgetPassword', [AuthenticationController::class, 'verifyFo
 Route::post('/resendCode', [AuthenticationController::class, 'resendCode']);
 
 Route::post('/resatPassword', [AuthenticationController::class, 'resatPassword']);
-Route::get('/allClassifications', [ClassificationController::class, 'allClassifications']);
+Route::post('/allClassifications', [ClassificationController::class, 'allClassifications']);
 
 
 

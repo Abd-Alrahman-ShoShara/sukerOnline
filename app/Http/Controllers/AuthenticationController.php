@@ -37,6 +37,7 @@ class AuthenticationController extends Controller
                 'nameOfStore' => 'required',
                 'classification_id' => 'required',
                 'adress' => 'required',
+                'language' => 'required|in:en,ar',
                 'fcm_token' => 'required',
             ]);
         
@@ -47,7 +48,7 @@ class AuthenticationController extends Controller
         
                 if (Carbon::now()->lessThanOrEqualTo($deletionPeriod)) {
                     return response([
-                        'message' => ' الرقم الذي قمت بادخاله تابع لحساب آخر '
+                        'message' => trans('auth.attachedN'),
                     ], 403);
                 } else {
                     DB::table('deleted_accounts')->where('phone', $request->phone)->delete();
@@ -73,6 +74,7 @@ class AuthenticationController extends Controller
                     'classification_id' => $request->classification_id,
                     'nameOfStore' => $request->nameOfStore,
                     'fcm_token' => $request->fcm_token,
+                    'language' => $request->language, // Ensure this is set correctly
                     'is_verified' => false,
                 ]
             );
@@ -96,13 +98,13 @@ class AuthenticationController extends Controller
                 'user_id' => $user->id,
             ], 200);
         } catch (\Exception $e) {
-            // Log the exception for debugging
+            
             Log::error('Registration Error: ' . $e->getMessage());
 
             return response([
-                'message' => trans('auth.registration_failed'), // Make sure this key exists in your translation files
+                'message' => trans('auth.registration_failed'), 
                 'error' => $e->getMessage(),
-            ], 500); // Return a 500 Internal Server Error
+            ], 500); 
         }
     }
 
@@ -416,7 +418,7 @@ class AuthenticationController extends Controller
                 DB::table('deleted_accounts')->where('phone', $request->phone)->delete();
             } else {
                 return response([
-                    'message' => 'لا يوجد حساب تابع لهذا الرقم  '
+                    'message' => trans('auth.NoAttachedN'),
                 ], 403);
             }
         }

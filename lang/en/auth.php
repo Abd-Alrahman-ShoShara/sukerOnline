@@ -2,6 +2,7 @@
 
 return [
 
+    'registration_failed' => 'Please check the information entered.',
     'registration_success' => 'Registration has been completed successfully, please enter the confirmation code',
     'verification_success'=>'Confirmed successfully',
     'verification_failed'=>'The code you entered is incorrect. Please try again.',
@@ -24,5 +25,7 @@ return [
     'editLang'=>'The application language has been successfully modified',
 
     'cannotDA'=>'You have undelivered requests. You cannot delete your account.',
-    'delatedAcc'=>'Account scheduled for deletion'
+    'delatedAcc'=>'Account scheduled for deletion.',
+    'attachedN'=>'The number you entered belongs to another account.',
+    'NoAttachedN'=>'There is no account for this number.'
 ];
