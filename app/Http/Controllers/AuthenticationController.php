@@ -13,48 +13,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use UltraMsg\WhatsAppApi;
+use Laravel\Passport\Token;
+
 
 class AuthenticationController extends Controller
 {
 
 
-    public function firstAccount()
-    {
-
-        Classification::create([
-            'name' => 'فندق'
-        ]);
-
-
-
-        Classification::create([
-            'name' => 'مطعم'
-        ]);
-
-        Classification::create([
-            'name' => 'سوبر ماركت'
-        ]);
-        User::create(
-            [
-                'name' => 'Admin1',
-                'phone' => '0948347729',
-                'password' => bcrypt('123456789'),
-                'role' => '0',
-            ]
-        );
-        User::create(
-            [
-                'name' => 'abd',
-                'phone' => '0943959774',
-                'password' => bcrypt('123456789'),
-                'role' => '1',
-                'nameOfStore' => 'agkerde',
-                'adress' => 'damas',
-                'classification_id' => '1',
-                'is_verified' => true,
-            ]
-        );
-    }
+   
 
 
 
@@ -266,11 +232,23 @@ class AuthenticationController extends Controller
     /////////////////////////////////////////////
     public function logout()
     {
-        User::find(Auth::id())->tokens()->delete();
-        return response([
+          // Assuming the user is logged in
+          $user = Auth::user();
+
+          // Revoke all tokens for the user
+          Token::where('user_id', $user->id)->update(['revoked' => true]);
+        return response()->json([
             'message' => trans('auth.logout')
         ]);
-    }
+   
+}
+    // public function logout()
+    // {
+    //     User::find(Auth::id())->tokens()->delete();
+    //     return response([
+    //         'message' => trans('auth.logout')
+    //     ]);
+    // }
     //////////////////////////////////////
     public function forgetPassword(Request $request)
     {
