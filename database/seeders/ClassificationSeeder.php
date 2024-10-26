@@ -26,5 +26,8 @@ class ClassificationSeeder extends Seeder
         Classification::create([
             'name'=>'سوبر ماركت'
         ]);
+        Classification::create([
+            'name'=>'غير ذلك'
+        ]);
     }
 }
