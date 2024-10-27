@@ -345,19 +345,19 @@ class PointsOrderController extends Controller
                 $query->withTrashed(); // Include soft-deleted products
             }
         ])->get();
-        return response()->json([
-            'Orders' => $pointsOrders
-        ], 200);
+        // return response()->json([
+        //     'Orders' => $pointsOrders
+        // ], 200);
     
-        // if ($pointsOrders->isNotEmpty()) {
-        //     return response()->json([
-        //         'Orders' => $pointsOrders
-        //     ], 200);
-        // } else {
-        //     return response()->json([
-        //         'message' => trans('normalOrder.noOrder')
-        //     ], 404);
-        // }
+        if ($pointsOrders->isEmpty()) {
+            return response()->json([
+                'message' => trans('normalOrder.noOrder')
+            ], 404);
+        } else {
+            return response()->json([
+                'Orders' => $pointsOrders
+            ], 200);
+        }
     }
     // public function allPointsOrders()
     // {
