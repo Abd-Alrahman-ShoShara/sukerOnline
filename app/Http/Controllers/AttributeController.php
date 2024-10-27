@@ -43,12 +43,9 @@ class AttributeController extends Controller
     {
         $configPath = config_path('abouteUs.json');
         $config = json_decode(File::get($configPath), true);
-        $userLanguage = Auth::user()->language;
+        $userLanguage = auth()->user()->language;
         $tr = new GoogleTranslate();
-    
-        // Decode Unicode escape sequences
-        $config['abouteUs'] = mb_convert_encoding($config['abouteUs'], 'UTF-8', 'UTF-16BE'); 
-    
+        // $config['abouteUs'] = mb_convert_encoding($config['abouteUs'], 'UTF-8', 'UTF-16BE'); 
         // Translate only the 'abouteUs' part
         $config['abouteUs'] = $tr->setTarget($userLanguage)->translate($config['abouteUs']);
     
