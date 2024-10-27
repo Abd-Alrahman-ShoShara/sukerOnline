@@ -42,16 +42,19 @@ class AttributeController extends Controller
     public function getAboutUs()
     {
         $configPath = config_path('abouteUs.json');
-    $config = json_decode(File::get($configPath), true);
-    $userLanguage = Auth::user()->language;
-    $tr = new GoogleTranslate();
-
-    // Translate only the 'abouteUs' part
-    $config['abouteUs'] = $tr->setTarget($userLanguage)->translate($config['abouteUs']);
-
-    return response()->json([
-        'abouteUs' => $config['abouteUs'],
-    ]);
+        $config = json_decode(File::get($configPath), true);
+        $userLanguage = Auth::user()->language;
+        $tr = new GoogleTranslate();
+    
+        // Decode Unicode escape sequences
+        $config['abouteUs'] = mb_convert_encoding($config['abouteUs'], 'UTF-8', 'UTF-16BE'); 
+    
+        // Translate only the 'abouteUs' part
+        $config['abouteUs'] = $tr->setTarget($userLanguage)->translate($config['abouteUs']);
+    
+        return response()->json([
+            'abouteUs' => $config['abouteUs'],
+        ]);
     }
     public function updateAboutUs(Request $request)
     {
