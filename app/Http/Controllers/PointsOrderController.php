@@ -352,7 +352,7 @@ class PointsOrderController extends Controller
         if ($pointsOrders->isEmpty()) {
             return response()->json([
                 'message' => trans('normalOrder.noOrder')
-            ], 404);
+            ], 200);
         } else {
             return response()->json([
                 'Orders' => $pointsOrders
