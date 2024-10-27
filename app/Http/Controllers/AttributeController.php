@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Stichoza\GoogleTranslate\GoogleTranslate;
+use GPBMetadata\Google\Api\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
@@ -41,11 +42,16 @@ class AttributeController extends Controller
     public function getAboutUs()
     {
         $configPath = config_path('abouteUs.json');
-        $config = json_decode(File::get($configPath), true);
+    $config = json_decode(File::get($configPath), true);
+    $userLanguage = Auth::user()->language;
+    $tr = new GoogleTranslate();
 
-        return response()->json([
-            'abouteUs' => $config['abouteUs'],
-        ]);
+    // Translate only the 'abouteUs' part
+    $config['abouteUs'] = $tr->setTarget($userLanguage)->translate($config['abouteUs']);
+
+    return response()->json([
+        'abouteUs' => $config['abouteUs'],
+    ]);
     }
     public function updateAboutUs(Request $request)
     {
