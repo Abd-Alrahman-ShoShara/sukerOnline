@@ -186,57 +186,76 @@ class PointsOrderController extends Controller
             ]);
         }
     
-        FacadesDB::transaction(function () use ($request, $pointsOrder, $user, $existingProducts, $newTotalPrice) {
-            $currentTotalPrice = $pointsOrder->totalPrice;
-            $pointsDifference = $newTotalPrice - $currentTotalPrice;
+        try {
+            FacadesDB::transaction(function () use ($request, $pointsOrder, $user, $existingProducts, $newTotalPrice) {
+                $currentTotalPrice = $pointsOrder->totalPrice;
+                $pointsDifference = $newTotalPrice - $currentTotalPrice;
     
-            // Check if the user has enough points for the update
-            if ($pointsDifference > 0 && $user->userPoints < $pointsDifference) {
-                throw new \Exception(trans('normalOrder.noEnoughPoint'),);
-            }
-    
-            // Adjust user points
-            $user->userPoints -= $pointsDifference;
-            $user->save();
-    
-            // Update the order
-            $pointsOrder->pointCarts()->delete();
-    
-            foreach ($request->products as $product) {
-                $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
-                $existingQuantity = $existingProducts->get($product['pointsProduct_id'], (object) ['quantity' => 0])->quantity;
-                $requestedQuantity = $product['quantity'];
-                $quantityDifference = $requestedQuantity - $existingQuantity;
-    
-                // If the new quantity is greater than the existing quantity, decrease stock
-                if ($quantityDifference > 0) {
-                    if ($pointsProduct->quantity < $quantityDifference) {
-                        throw new \Exception(trans('normalOrder.noQuantity'),);
-                    }
-                    
-                    $pointsProduct->decrement('quantity', $quantityDifference);
-                } 
-                // If the new quantity is less than the existing quantity, increase stock
-                elseif ($quantityDifference < 0) {
-                    $pointsProduct->increment('quantity', abs($quantityDifference));
+                // Check if the user has enough points for the update
+                if ($pointsDifference > 0 && $user->userPoints < $pointsDifference) {
+                    throw new \Exception(trans('normalOrder.noEnoughPoint'),);
                 }
     
-                PointsCart::create([
-                    'pointsOrders_id' => $pointsOrder->id,
-                    'pointsProduct_id' => $product['pointsProduct_id'],
-                    'quantity' => $requestedQuantity,
-                ]);
+                // Adjust user points
+                $user->userPoints -= $pointsDifference;
+                $user->save();
+    
+                // Update the order
+                $pointsOrder->pointCarts()->delete();
+    
+                foreach ($request->products as $product) {
+                    $pointsProduct = PointsProduct::find($product['pointsProduct_id']);
+                    $existingQuantity = $existingProducts->get($product['pointsProduct_id'], (object) ['quantity' => 0])->quantity;
+                    $requestedQuantity = $product['quantity'];
+                    $quantityDifference = $requestedQuantity - $existingQuantity;
+    
+                    // If the new quantity is greater than the existing quantity, decrease stock
+                    if ($quantityDifference > 0) {
+                        if ($pointsProduct->quantity < $quantityDifference) {
+                            throw new \Exception(trans('normalOrder.noQuantity'),);
+                        }
+                        $pointsProduct->decrement('quantity', $quantityDifference);
+                    } 
+                    // If the new quantity is less than the existing quantity, increase stock
+                    elseif ($quantityDifference < 0) {
+                        $pointsProduct->increment('quantity', abs($quantityDifference));
+                    }
+    
+                    PointsCart::create([
+                        'pointsOrders_id' => $pointsOrder->id,
+                        'pointsProduct_id' => $product['pointsProduct_id'],
+                        'quantity' => $requestedQuantity,
+                    ]);
+                }
+    
+                // Update the total price of the order
+                $pointsOrder->totalPrice = $newTotalPrice;
+                $pointsOrder->save();
+            });
+    
+            // If the transaction succeeds, return the updated order
+            $pointsOrder = PointsOrder::find($order_id)->load('pointCarts'); 
+            return response()->json([
+                'message' => trans('normalOrder.updated'),
+                'theOrder' => $pointsOrder,
+            ]); 
+    
+        } catch (\Exception $e) { 
+            // Handle specific exceptions for better error messages
+            if ($e->getMessage() === trans('normalOrder.noEnoughPoint')) {
+                return response()->json([
+                    'message' => trans('normalOrder.noEnoughPoint'),
+                ], 403); // Use 422 for validation-like errors
+            } elseif ($e->getMessage() === trans('normalOrder.noQuantity')) {
+                return response()->json([
+                    'message' => trans('normalOrder.noQuantity'),
+                ], 403); 
+            } else { // Generic catch for any other exception
+                return response()->json([
+                    'message' => 'An error occurred. Please try again later.', 
+                ], 500); // Use 500 for server-side errors
             }
-    
-            // Update the total price of the order
-            $pointsOrder->totalPrice = $newTotalPrice;
-            $pointsOrder->save();
-        });
-    
-        return response()->json([
-            'message' =>trans('normalOrder.updated'),
-            'theOrder' => $pointsOrder->load('pointCarts'),
-        ]);
+        }
     }
 
     //     $pointsOrder = PointsOrder::find($pointsOrder_id);
