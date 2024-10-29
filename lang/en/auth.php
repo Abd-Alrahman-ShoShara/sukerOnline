@@ -2,7 +2,7 @@
 
 return [
 
-    'registration_failed' => 'Please check the information entered.',
+    'registration_failed' => 'Please check the information entered , and complete it .',
     'registration_success' => 'Registration has been completed successfully, please enter the confirmation code',
     'verification_success'=>'Confirmed successfully',
     'verification_failed'=>'The code you entered is incorrect. Please try again.',

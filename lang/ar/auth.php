@@ -1,7 +1,7 @@
 <?php
 return[
 
-    'registration_failed' => 'الرجاء التأكد من المعلومات المدخلة ',
+    'registration_failed' => ' الرجاء التأكد من المعلومات المدخلة واكمالها',
     'registration_success' => 'تم التسجيل بنجاح , الرجاء ادخال كود التأكيد',
     'verification_success' => 'تم التأكيد بنجاح',
     'verification_failed' => 'الكود الذي ادخلته خاطئ الرجاء المحاولة مجدداً',
