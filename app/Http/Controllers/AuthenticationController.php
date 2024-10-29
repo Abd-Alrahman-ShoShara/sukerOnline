@@ -97,13 +97,14 @@ class AuthenticationController extends Controller
                 'message' => trans('auth.registration_success'),
                 'user_id' => $user->id,
             ], 200);
+            
         } catch (\Exception $e) {
             
             Log::error('Registration Error: ' . $e->getMessage());
 
             return response([
                 'message' => trans('auth.registration_failed'), 
-                'error' => $e->getMessage(),
+                // 'error' => $e->getMessage(),
             ], 500); 
         }
     }
