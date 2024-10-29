@@ -32,7 +32,7 @@ class AuthenticationController extends Controller
         try {
             $request->validate([
                 'name' => 'required|max:255',
-                'phone' => 'required|regex:/^[0-9]+$/',
+                'phone' => 'required|regex:/^09[0-9]+$/',
                 'password' => 'required|min:6|confirmed',
                 'nameOfStore' => 'required',
                 'classification_id' => 'required',
