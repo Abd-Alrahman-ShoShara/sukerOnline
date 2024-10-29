@@ -105,7 +105,7 @@ class AuthenticationController extends Controller
             return response([
                 'message' => trans('auth.registration_failed'), 
                 // 'error' => $e->getMessage(),
-            ], 200); 
+            ], 403); 
         }
     }
 
