@@ -157,7 +157,7 @@ class PointsOrderController extends Controller
     
         if (!$pointsOrder || $pointsOrder->user_id !== $user->id || !in_array($pointsOrder->state, ['pending', 'preparing'])) {
             return response()->json([
-                'message' => trans('normalOrder.cantDelete'),
+                'message' => trans('normalOrder.cantUpdate'),
             ], 403);
         }
     
@@ -213,6 +213,7 @@ class PointsOrderController extends Controller
                     if ($pointsProduct->quantity < $quantityDifference) {
                         throw new \Exception(trans('normalOrder.noQuantity'),);
                     }
+                    
                     $pointsProduct->decrement('quantity', $quantityDifference);
                 } 
                 // If the new quantity is less than the existing quantity, increase stock
