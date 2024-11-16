@@ -207,7 +207,7 @@ class AuthenticationController extends Controller
             ], 422);
         }
     }
-
+    //
     public function resendCode(Request $request)
     {
         $request->validate([
