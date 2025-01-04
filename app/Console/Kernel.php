@@ -10,10 +10,12 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      */
-    protected function schedule(Schedule $schedule): void
+    protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // تأكد من أن الأمر سيتم تنفيذه في أول يوم من كل شهر
+        $schedule->command('delete:unverified-users')->monthlyOn(1, '00:00');
     }
+    
 
     /**
      * Register the commands for the application.
