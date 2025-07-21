@@ -19,13 +19,6 @@ use Laravel\Passport\Token;
 class AuthenticationController extends Controller
 {
 
-
-   
-
-
-
-
-
     public function register(Request $request)
     {
         
@@ -235,7 +228,7 @@ class AuthenticationController extends Controller
     /////////////////////////////////////////////
     public function logout()
     {
-          // Assuming the user is logged in
+          // Assuming the user is logged inn
           $user = Auth::user();
 
           // Revoke all tokens for the user
