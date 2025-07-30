@@ -14,7 +14,7 @@ class AttributeController extends Controller
     {
         $request->validate([
             'startTime' => 'required',
-            'endTime'   => 'required|after:startTime',
+            'endTime'   => 'required',
         ]);
 
         set_setting('startTime', $request->startTime);
