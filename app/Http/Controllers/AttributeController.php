@@ -13,8 +13,8 @@ class AttributeController extends Controller
     public function updateWorkTime(Request $request)
     {
         $request->validate([
-            'startTime' => 'required|date_format:H:i',
-            'endTime'   => 'required|date_format:H:i|after:startTime',
+            'startTime' => 'required',
+            'endTime'   => 'required|after:startTime',
         ]);
 
         set_setting('startTime', $request->startTime);
