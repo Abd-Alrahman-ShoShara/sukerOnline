@@ -12,23 +12,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('phone');
-            $table->string('password');
-            $table->string('fcm_token')->nullable();
-            $table->string('role')->default('1');
-            $table->enum('language',['en','ar'])->default('ar');
-            $table->string('verification_code')->nullable();
-            $table->boolean('is_verified')->default(false);
-            $table->string('nameOfStore')->nullable();
-            $table->string('adress')->nullable();
-            $table->bigInteger('userPoints')->default(0);
-            $table->unsignedBigInteger('classification_id')->nullable();
-            $table->softDeletes();
-            $table->foreign('classification_id')->references('id')->on('classifications')->onDelete('cascade');            
-            $table->rememberToken();
-            $table->timestamps();
+        $table->id();
+        $table->string('name');
+        $table->string('phone');
+        $table->string('password');
+        $table->string('fcm_token')->nullable();
+        $table->string('role')->default('1');
+        $table->enum('language', ['en','ar'])->default('ar');
+        $table->string('verification_code')->nullable();
+        $table->timestamp('verification_code_expires_at')->nullable(); // ⬅ العمود الجديد
+        $table->boolean('is_verified')->default(false);
+        $table->string('nameOfStore')->nullable();
+        $table->string('adress')->nullable();
+        $table->bigInteger('userPoints')->default(0);
+        $table->unsignedBigInteger('classification_id')->nullable();
+        $table->softDeletes();
+        $table->foreign('classification_id')->references('id')->on('classifications')->onDelete('cascade');            
+        $table->rememberToken();
+        $table->timestamps();
         });
     }
 
