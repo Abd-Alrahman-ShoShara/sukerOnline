@@ -16,8 +16,8 @@ class SettingsSeeder extends Seeder
             'Num1'        => '+1234567890',
             'Num2'        => '+0987654321',
             'Num3'        => '+1122334455',
-            'storePrice'  => 50,
-            'urgentPrice' => 100,
+            'storePrice'  => "50",
+            'urgentPrice' => "100",
             'isActive'    => true,
         ];
 
