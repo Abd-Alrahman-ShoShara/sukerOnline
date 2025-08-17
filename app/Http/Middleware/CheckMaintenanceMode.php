@@ -14,23 +14,17 @@ class CheckMaintenanceMode
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next)
+     public function handle(Request $request, Closure $next)
     {
-       
-        $configPath = config_path('appWorking.json');
-    
-        if (!File::exists($configPath)) {
-            return response()->json(['message' => 'Configuration file not found.'], 404);
-        }
-    
-        $config = json_decode(File::get($configPath), true);
-        if ( $config['isActive']){
+        // جلب الحالة من جدول settings
+        $isActive = setting('isActive', true); // القيمة الافتراضية true يعني التطبيق يعمل
 
-            return $next($request);
+        if ($isActive) {
+            return $next($request); // التطبيق يعمل، يسمح بالطلب
         }
+
         return response()->json([
-            'message'=>'the application under Maintenance '
-        ]);
-
+            'message' => 'The application is under maintenance'
+        ], 503); // 503 كود مناسب للصيانة
     }
 }
