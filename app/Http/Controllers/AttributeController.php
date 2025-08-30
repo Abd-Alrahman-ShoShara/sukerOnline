@@ -78,7 +78,7 @@ class AttributeController extends Controller
         return response()->json(['message' => 'تم تعديل أرقام التواصل بنجاح'], 200);
     }
 
-    /* ========== الأسعار الثابتة ========== */
+    /*  الأسعار الثابتة  */
 
     public function getPrices()
     {
