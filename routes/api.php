@@ -42,7 +42,7 @@ Route::post('/forgetPassword', [AuthenticationController::class, 'forgetPassword
 Route::post('/verifyForgetPassword', [AuthenticationController::class, 'verifyForgetPassword']);
 Route::post('/resendCode', [AuthenticationController::class, 'resendCode']);
 
-Route::post('/resatPassword', [AuthenticationController::class, 'resatPassword']);
+Route::post('/resatPassword', [AuthenticationController::class, 'resetPassword']);
 Route::post('/allClassifications', [ClassificationController::class, 'allClassifications']);
 
 

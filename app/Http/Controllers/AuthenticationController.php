@@ -472,75 +472,152 @@ class AuthenticationController extends Controller
     // }
     //////////////////////////////////////
     public function forgetPassword(Request $request)
-    {
-        $request->validate([
-            'phone' => 'required',
-        ]);
+{
+    $request->validate([
+        'phone' => 'required',
+    ]);
 
-        $user = User::where('phone', $request->phone)->first();
-        if (!$user) {
-            return response()->json([
-                'message' => trans('auth.wrongNumber')
-            ]);
-        }
+    $user = User::where('phone', $request->phone)->first();
+
+    if (!$user) {
+        return response()->json([
+            'message' => trans('auth.wrongNumber')
+        ], 404);
+    }
+
+    // التحقق من محاولات الإرسال
+    $cacheKey = "reset_attempts_{$user->phone}";
+    $attempts = Cache::get($cacheKey, 0);
+
+    if ($attempts >= config('whatsapp.max_send_attempts', 3)) {
+        return response()->json([
+            'message' => 'تم تجاوز عدد المحاولات المسموحة. يرجى المحاولة لاحقاً.',
+        ], 429);
+    }
+
+    try {
+        DB::beginTransaction();
+
         $code = mt_rand(1000, 9999);
+
         $user->verification_code = $code;
+        $user->verification_code_expires_at = Carbon::now()->addMinutes(
+            config('whatsapp.verification_code_expiry', 10)
+        );
         $user->save();
 
-        // $this->sendCode($user['phone'], $code,$user['name']);
+        $whatsappResult = $this->whatsappService->sendVerificationCode(
+            $user->phone,
+            $code,
+            $user->name
+        );
+
+        if (!$whatsappResult['success']) {
+            DB::rollBack();
+
+            Log::error('Failed to send reset code via WhatsApp', [
+                'user_id' => $user->id,
+                'phone' => $user->phone,
+                'error' => $whatsappResult['error']
+            ]);
+
+            return response()->json([
+                'message' => 'حدث خطأ في إرسال كود التحقق. يرجى المحاولة مرة أخرى.',
+            ], 500);
+        }
+
+        // زيادة عداد المحاولات
+        Cache::put($cacheKey, $attempts + 1, now()->addSeconds(config('whatsapp.send_attempt_cooldown', 60)));
+
+        DB::commit();
 
         return response([
             'message' => trans('auth.codeSent'),
             'user_id' => $user->id,
-
+            'expires_at' => $user->verification_code_expires_at->toISOString(),
         ], 200);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        Log::error('Forget Password Error', [
+            'phone' => $request->phone,
+            'error' => $e->getMessage()
+        ]);
+
+        return response()->json([
+            'message' => 'فشل في إرسال الكود، حاول لاحقاً'
+        ], 500);
     }
+}
     ///////////////////////////////////////////////////
     public function verifyForgetPassword(Request $request)
-    {
+{
+    $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'code' => 'required',
+    ]);
 
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'code' => 'required',
-        ]);
+    $user = User::findOrFail($request->user_id);
 
-        $user = User::findOrFail($request->user_id);
-
-        // if ($user->verification_code == $request->code) {
-        if ($user->verification_code) {
-
-
-
-            return response([
-                'message' => trans('auth.codeCorrect')
-
-            ], 200);
-        } else {
-            return response([
-                'message' => trans('auth.codeWrong')
-            ], 422);
-        }
+    if (
+        $user->verification_code === $request->code &&
+        $user->verification_code_expires_at &&
+        Carbon::now()->lessThanOrEqualTo($user->verification_code_expires_at)
+    ) {
+        return response([
+            'message' => trans('auth.codeCorrect')
+        ], 200);
     }
 
+    return response([
+        'message' => trans('auth.codeWrong')
+    ], 422);
+}
+
     /////////////////////////////////////////////////////
-    public function resatPassword(Request $request)
-    {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'password' => 'required|min:6|confirmed',
-            'fcm_token' => 'required',
-        ]);
+    public function resetPassword(Request $request)
+{
+    $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'password' => 'required|min:6|confirmed',
+        'fcm_token' => 'required',
+    ]);
+
+    try {
+        DB::beginTransaction();
+
         $user = User::findOrFail($request->user_id);
-        $user->update(['password' => Hash::make($request['password'])]);
+
+        $user->update([
+            'password' => Hash::make($request->password),
+            'fcm_token' => $request->fcm_token,
+            'verification_code' => null,
+            'verification_code_expires_at' => null,
+        ]);
 
         $token = $user->createToken('auth_token')->accessToken;
-        $user->fcm_token = $request['fcm_token'];
-        $user->save();
+
+        DB::commit();
+
         return response()->json([
             'message' => trans('auth.editPassword'),
             'token' => $token,
+        ], 200);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        Log::error('Reset Password Error', [
+            'user_id' => $request->user_id,
+            'error' => $e->getMessage()
         ]);
+
+        return response()->json([
+            'message' => 'فشل تغيير كلمة المرور'
+        ], 500);
     }
+}   
     ///////////////////////////////////////////
     public function resatPasswordEnternal(Request $request)
     {
