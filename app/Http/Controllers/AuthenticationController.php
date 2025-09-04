@@ -108,128 +108,257 @@ class AuthenticationController extends Controller
     //         ], 403); 
     //     }
     // }
+public function register(Request $request)
+{
+    try {
+        // ✅ 1. Validation
+        $request->validate([
+            'name' => 'required|max:255',
+            'phone' => ['required', 'regex:/^09[0-9]{8}$/'], // شلنا unique
+            'password' => 'required|min:6|confirmed',
+            'nameOfStore' => 'required',
+            'classification_id' => 'required',
+            'adress' => 'required',
+            'language' => 'required|in:en,ar',
+            'fcm_token' => 'required',
+        ]);
 
-    public function register(Request $request)
-    {
-        try {
-            $request->validate([
-                'name' => 'required|max:255',
-                'phone' => 'required|regex:/^09[0-9]{8}$/|unique:users',
-                'password' => 'required|min:6|confirmed',
-                'nameOfStore' => 'required',
-                'classification_id' => 'required',
-                'adress' => 'required',
-                'language' => 'required|in:en,ar',
-                'fcm_token' => 'required',
-            ]);
+        // ✅ 2. Check if the phone was deleted recently
+        $deletedAccount = DB::table('deleted_accounts')->where('phone', $request->phone)->first();
 
-            $deletedAccount = DB::table('deleted_accounts')->where('phone', $request->phone)->first();
+        if ($deletedAccount) {
+            $deletionPeriod = Carbon::parse($deletedAccount->deleted_at)->addDays(20);
 
-            if ($deletedAccount) {
-                $deletionPeriod = Carbon::parse($deletedAccount->deleted_at)->addDays(20);
-
-                if (Carbon::now()->lessThanOrEqualTo($deletionPeriod)) {
-                    return response([
-                        'message' => trans('auth.attachedN'),
-                    ], 403);
-                } else {
-                    DB::table('deleted_accounts')->where('phone', $request->phone)->delete();
-                }
-            }
-
-            // التحقق من محاولات الإرسال المتكررة
-            $cacheKey = "sms_attempts_{$request->phone}";
-            $attempts = Cache::get($cacheKey, 0);
-
-            if ($attempts >= config('whatsapp.max_send_attempts')) {
-                return response()->json([
-                    'message' => 'تم تجاوز عدد المحاولات المسموحة. يرجى المحاولة لاحقاً.',
-                ], 429);
-            }
-
-            // Check if the phone number already exists and is verified
-            $existingUser = User::where('phone', $request->phone)->first();
-
-            if ($existingUser && $existingUser->is_verified) {
+            if (Carbon::now()->lessThanOrEqualTo($deletionPeriod)) {
                 return response([
-                    'message' => trans('auth.already_verified'),
-                ], 400);
+                    'message' => trans('auth.attachedN'),
+                ], 403);
+            } else {
+                DB::table('deleted_accounts')->where('phone', $request->phone)->delete();
             }
+        }
 
-            DB::beginTransaction();
+        // ✅ 3. Attempts protection (anti-spam)
+        $cacheKey = "sms_attempts_{$request->phone}";
+        $attempts = Cache::get($cacheKey, 0);
 
-            // Create or update the user if not verified
-            $user = User::updateOrCreate(
-                ['phone' => $request->phone],
-                [
-                    'name' => $request->name,
-                    'password' => Hash::make($request->password),
-                    'adress' => $request->adress,
-                    'classification_id' => $request->classification_id,
-                    'nameOfStore' => $request->nameOfStore,
-                    'fcm_token' => $request->fcm_token,
-                    'language' => $request->language,
-                    'is_verified' => false,
-                ]
-            );
+        if ($attempts >= config('whatsapp.max_send_attempts')) {
+            return response()->json([
+                'message' => 'تم تجاوز عدد المحاولات المسموحة. يرجى المحاولة لاحقاً.',
+            ], 429);
+        }
 
-            $code = mt_rand(1000, 9999);
-            $user->verification_code = $code;
-            $user->verification_code_expires_at = Carbon::now()->addMinutes(config('whatsapp.verification_code_expiry', 10));
-            $user->save();
+        // ✅ 4. Check existing user
+        $existingUser = User::where('phone', $request->phone)->first();
 
-            // إرسال كود التحقق عبر WhatsApp
-            $whatsappResult = $this->whatsappService->sendVerificationCode(
-                $user->phone,
-                $code,
-                $user->name
-            );
-
-            if (!$whatsappResult['success']) {
-                DB::rollBack();
-
-                Log::error('Failed to send WhatsApp verification code', [
-                    'user_id' => $user->id,
-                    'phone' => $request->phone,
-                    'error' => $whatsappResult['error']
-                ]);
-
-                return response()->json([
-                    'message' => 'حدث خطأ في إرسال كود التحقق. يرجى المحاولة مرة أخرى.',
-                    'details' => $whatsappResult['error']
-                ], 500);
-            }
-
-            // زيادة عداد المحاولات
-            Cache::put($cacheKey, $attempts + 1, now()->addSeconds(config('whatsapp.send_attempt_cooldown', 60)));
-
-            DB::commit();
-
-            Log::info('User registered successfully', [
-                'user_id' => $user->id,
-                'phone' => $request->phone
-            ]);
-
+        if ($existingUser && $existingUser->is_verified) {
             return response([
-                'message' => trans('auth.registration_success'),
-                'user_id' => $user->id,
-                'expires_at' => $user->verification_code_expires_at->toISOString(),
-            ], 200);
+                'message' => trans('auth.already_verified'),
+            ], 400);
+        }
 
-        } catch (\Exception $e) {
+        DB::beginTransaction();
+
+        // ✅ 5. Create or update user if not verified
+        $user = User::updateOrCreate(
+            ['phone' => $request->phone],
+            [
+                'name' => $request->name,
+                'password' => Hash::make($request->password),
+                'adress' => $request->adress,
+                'classification_id' => $request->classification_id,
+                'nameOfStore' => $request->nameOfStore,
+                'fcm_token' => $request->fcm_token,
+                'language' => $request->language,
+                'is_verified' => false,
+            ]
+        );
+
+        // ✅ 6. Generate new verification code
+        $code = mt_rand(1000, 9999);
+        $user->verification_code = $code;
+        $user->verification_code_expires_at = Carbon::now()->addMinutes(
+            config('whatsapp.verification_code_expiry', 10)
+        );
+        $user->save();
+
+        // ✅ 7. Send verification via WhatsApp
+        $whatsappResult = $this->whatsappService->sendVerificationCode(
+            $user->phone,
+            $code,
+            $user->name
+        );
+
+        if (!$whatsappResult['success']) {
             DB::rollBack();
 
-            Log::error('Registration Error', [
+            Log::error('Failed to send WhatsApp verification code', [
+                'user_id' => $user->id,
                 'phone' => $request->phone,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error' => $whatsappResult['error']
             ]);
 
-            return response([
-                'message' => trans('auth.registration_failed'),
-            ], 403);
+            return response()->json([
+                'message' => 'حدث خطأ في إرسال كود التحقق. يرجى المحاولة مرة أخرى.',
+                'details' => $whatsappResult['error']
+            ], 500);
         }
+
+        // ✅ 8. Increase attempts counter
+        Cache::put(
+            $cacheKey,
+            $attempts + 1,
+            now()->addSeconds(config('whatsapp.send_attempt_cooldown', 60))
+        );
+
+        DB::commit();
+
+        Log::info('User registered successfully', [
+            'user_id' => $user->id,
+            'phone' => $request->phone
+        ]);
+
+        return response([
+            'message' => trans('auth.registration_success'),
+            'user_id' => $user->id,
+            'expires_at' => $user->verification_code_expires_at->toISOString(),
+        ], 200);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        Log::error('Registration Error', [
+            'phone' => $request->phone,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return response([
+            'message' => trans('auth.registration_failed'),
+        ], 403);
     }
+}
+    // public function register(Request $request)
+    // {
+    //     try {
+    //         $request->validate([
+    //             'name' => 'required|max:255',
+    //             'phone' => 'required|regex:/^09[0-9]{8}$/|unique:users',
+    //             'password' => 'required|min:6|confirmed',
+    //             'nameOfStore' => 'required',
+    //             'classification_id' => 'required',
+    //             'adress' => 'required',
+    //             'language' => 'required|in:en,ar',
+    //             'fcm_token' => 'required',
+    //         ]);
+
+    //         $deletedAccount = DB::table('deleted_accounts')->where('phone', $request->phone)->first();
+
+    //         if ($deletedAccount) {
+    //             $deletionPeriod = Carbon::parse($deletedAccount->deleted_at)->addDays(20);
+
+    //             if (Carbon::now()->lessThanOrEqualTo($deletionPeriod)) {
+    //                 return response([
+    //                     'message' => trans('auth.attachedN'),
+    //                 ], 403);
+    //             } else {
+    //                 DB::table('deleted_accounts')->where('phone', $request->phone)->delete();
+    //             }
+    //         }
+
+    //         // التحقق من محاولات الإرسال المتكررة
+    //         $cacheKey = "sms_attempts_{$request->phone}";
+    //         $attempts = Cache::get($cacheKey, 0);
+
+    //         if ($attempts >= config('whatsapp.max_send_attempts')) {
+    //             return response()->json([
+    //                 'message' => 'تم تجاوز عدد المحاولات المسموحة. يرجى المحاولة لاحقاً.',
+    //             ], 429);
+    //         }
+
+    //         // Check if the phone number already exists and is verified
+    //         $existingUser = User::where('phone', $request->phone)->first();
+
+    //         if ($existingUser && $existingUser->is_verified) {
+    //             return response([
+    //                 'message' => trans('auth.already_verified'),
+    //             ], 400);
+    //         }
+
+    //         DB::beginTransaction();
+
+    //         // Create or update the user if not verified
+    //         $user = User::updateOrCreate(
+    //             ['phone' => $request->phone],
+    //             [
+    //                 'name' => $request->name,
+    //                 'password' => Hash::make($request->password),
+    //                 'adress' => $request->adress,
+    //                 'classification_id' => $request->classification_id,
+    //                 'nameOfStore' => $request->nameOfStore,
+    //                 'fcm_token' => $request->fcm_token,
+    //                 'language' => $request->language,
+    //                 'is_verified' => false,
+    //             ]
+    //         );
+
+    //         $code = mt_rand(1000, 9999);
+    //         $user->verification_code = $code;
+    //         $user->verification_code_expires_at = Carbon::now()->addMinutes(config('whatsapp.verification_code_expiry', 10));
+    //         $user->save();
+
+    //         // إرسال كود التحقق عبر WhatsApp
+    //         $whatsappResult = $this->whatsappService->sendVerificationCode(
+    //             $user->phone,
+    //             $code,
+    //             $user->name
+    //         );
+
+    //         if (!$whatsappResult['success']) {
+    //             DB::rollBack();
+
+    //             Log::error('Failed to send WhatsApp verification code', [
+    //                 'user_id' => $user->id,
+    //                 'phone' => $request->phone,
+    //                 'error' => $whatsappResult['error']
+    //             ]);
+
+    //             return response()->json([
+    //                 'message' => 'حدث خطأ في إرسال كود التحقق. يرجى المحاولة مرة أخرى.',
+    //                 'details' => $whatsappResult['error']
+    //             ], 500);
+    //         }
+
+    //         // زيادة عداد المحاولات
+    //         Cache::put($cacheKey, $attempts + 1, now()->addSeconds(config('whatsapp.send_attempt_cooldown', 60)));
+
+    //         DB::commit();
+
+    //         Log::info('User registered successfully', [
+    //             'user_id' => $user->id,
+    //             'phone' => $request->phone
+    //         ]);
+
+    //         return response([
+    //             'message' => trans('auth.registration_success'),
+    //             'user_id' => $user->id,
+    //             'expires_at' => $user->verification_code_expires_at->toISOString(),
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         Log::error('Registration Error', [
+    //             'phone' => $request->phone,
+    //             'error' => $e->getMessage(),
+    //             'trace' => $e->getTraceAsString()
+    //         ]);
+
+    //         return response([
+    //             'message' => trans('auth.registration_failed'),
+    //         ], 403);
+    //     }
+    // }
 
 
     // public function register(Request $request)
