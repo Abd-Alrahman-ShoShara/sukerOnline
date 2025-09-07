@@ -826,7 +826,11 @@ public function register(Request $request)
         ]);
 
         $user = User::withTrashed()->where('phone', $request->phone)->first();
-
+        if($user->is_verified!==1){
+            return response([
+                'message' => trans('auth.notVerified')
+            ], 403);
+        }
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response([
                 'message' => trans('auth.wrongLogin')

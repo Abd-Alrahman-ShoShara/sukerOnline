@@ -10,6 +10,8 @@ return [
     'wrongNumber'=>'The mobile number you entered is incorrect.',
     'codeSent'=>'We have sent a confirmation code to your number, enter it',
     'codeCorrect'=>'Confirmed, enter new password.',
+    'code_expired'=>'The verification code has expired. Please try again to receive a new code.',
+    'notVerified'=>'Your account is not confirmed. Register your account again and confirm it.',
     'codeWrong'=>'The code you entered is incorrect',
     'already_verified' => 'Your account is already verified.',
     'code_resent' => 'Verification code resent successfully.',
