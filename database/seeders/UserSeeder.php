@@ -20,6 +20,7 @@ class UserSeeder extends Seeder
                 'phone'=> '0948347729',
                 'password'=> bcrypt('123456789'),
                 'role'=> '0',
+                'is_verified'=>true,
             ]);
        
             User::create(
