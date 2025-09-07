@@ -12,11 +12,14 @@ class AttributeController extends Controller
 
     public function updateWorkTime(Request $request)
     {
-        $request->validate([
-            'startTime' => 'required',
-            'endTime'   => 'required',
+        // $request->validate([
+        //     'startTime' => 'required',
+        //     'endTime'   => 'required',
+        // ]);
+            $request->validate([
+            'startTime' => 'required|date_format:H:i',
+            'endTime' => 'required|date_format:H:i|after:startTime'
         ]);
-
         set_setting('startTime', $request->startTime);
         set_setting('endTime',   $request->endTime);
 
@@ -130,10 +133,10 @@ class AttributeController extends Controller
     
     // public function updateWorkTime(Request $request)
     // {
-    //     $request->validate([
-    //         'startTime' => 'required|date_format:H:i',
-    //         'endTime' => 'required|date_format:H:i|after:startTime'
-    //     ]);
+        // $request->validate([
+        //     'startTime' => 'required|date_format:H:i',
+        //     'endTime' => 'required|date_format:H:i|after:startTime'
+        // ]);
 
     //     $configPath = config_path('timeWork.json');
     //     $config = json_decode(File::get($configPath), true);
