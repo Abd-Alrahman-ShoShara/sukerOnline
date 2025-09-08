@@ -12,57 +12,107 @@ use Illuminate\Support\Facades\URL;
 class ProductController extends Controller
 {
 
-    public function AddProduct(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|unique:products',
-            'price' => 'required|numeric',
-            'description' => 'required',
-            'is_public' => 'required|boolean',
-            'classifications' => 'required_if:is_public,false|array',
-            'classifications.*' => 'required_if:is_public,false|string',
-            'type' => 'nullable|string',
-            'points' => 'required|integer',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
+    // public function AddProduct(Request $request)
+    // {
+    //     $request->validate([
+    //         'name' => 'required|unique:products',
+    //         'price' => 'required|numeric',
+    //         'description' => 'required',
+    //         'is_public' => 'required|boolean',
+    //         'classifications' => 'required_if:is_public,false|array',
+    //         'classifications.*' => 'required_if:is_public,false|string',
+    //         'type' => 'nullable|string',
+    //         'points' => 'required|integer',
+    //         'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
 
-        ]);
+    //     ]);
 
-        $imageUrls = [];
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $key => $image) {
-                $imageName = time() . $key . '.' . $image->extension();
-                $image->move(public_path('uploads/'), $imageName);
-                $imageUrls[] = URL::asset('uploads/' . $imageName);
-            }
-        } else {
-            $imageUrls = null;
+    //     $imageUrls = [];
+    //     if ($request->hasFile('images')) {
+    //         foreach ($request->file('images') as $key => $image) {
+    //             $imageName = time() . $key . '.' . $image->extension();
+    //             $image->move(public_path('uploads/'), $imageName);
+    //             $imageUrls[] = URL::asset('uploads/' . $imageName);
+    //         }
+    //     } else {
+    //         $imageUrls = null;
+    //     }
+
+    //     $product = Product::create([
+    //         'name' => $request->input('name'),
+    //         'price' => $request->input('price'),
+    //         'type' => $request->type,
+    //         'points' => $request->points,
+    //         'description' => $request->input('description'),
+    //         'images' => $imageUrls ? json_encode($imageUrls) : null,
+    //         'is_public' => $request->is_public,
+    //     ]);
+
+    //     if (!$request->is_public) {
+    //         foreach ($request->input('classifications') as $classification) {
+    //             ClassificationProduct::create([
+    //                 'classification_id' => $classification,
+    //                 'product_id' => $product->id,
+    //             ]);
+    //         }
+    //     }
+
+    //     return response()->json([
+    //         'message' => trans('Complaints.Created'),
+    //         'product' => $product,
+    //     ], 201);
+    // }
+
+public function AddProduct(Request $request)
+{
+    $request->validate([
+        'name' => 'required|unique:products',
+        'price' => 'required|numeric',
+        'description' => 'required',
+        'is_public' => 'required|boolean',
+        'classifications' => 'required_if:is_public,false|array',
+        'classifications.*' => 'required_if:is_public,false|string',
+        'type' => 'nullable|string',
+        'points' => 'required|integer',
+        'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
+    ]);
+
+    $imageUrls = [];
+
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $image) {
+            // يخزن داخل storage/app/public/uploads
+            $path = $image->store('uploads', 'public');
+
+            // يولد رابط مباشر للوصول للصورة عبر public/storage
+            $imageUrls[] = asset('storage/' . $path);
         }
-
-        $product = Product::create([
-            'name' => $request->input('name'),
-            'price' => $request->input('price'),
-            'type' => $request->type,
-            'points' => $request->points,
-            'description' => $request->input('description'),
-            'images' => $imageUrls ? json_encode($imageUrls) : null,
-            'is_public' => $request->is_public,
-        ]);
-
-        if (!$request->is_public) {
-            foreach ($request->input('classifications') as $classification) {
-                ClassificationProduct::create([
-                    'classification_id' => $classification,
-                    'product_id' => $product->id,
-                ]);
-            }
-        }
-
-        return response()->json([
-            'message' => trans('Complaints.Created'),
-            'product' => $product,
-        ], 201);
     }
 
+    $product = Product::create([
+        'name' => $request->input('name'),
+        'price' => $request->input('price'),
+        'type' => $request->type,
+        'points' => $request->points,
+        'description' => $request->input('description'),
+        'images' => $imageUrls ? json_encode($imageUrls) : null,
+        'is_public' => $request->is_public,
+    ]);
+
+    if (!$request->is_public) {
+        foreach ($request->input('classifications') as $classification) {
+            ClassificationProduct::create([
+                'classification_id' => $classification,
+                'product_id' => $product->id,
+            ]);
+        }
+    }
+
+    return response()->json([
+        'message' => trans('Complaints.Created'),
+        'product' => $product,
+    ], 201);
+}
 
 
 
