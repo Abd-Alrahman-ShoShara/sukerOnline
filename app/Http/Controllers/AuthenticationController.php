@@ -818,52 +818,58 @@ public function register(Request $request)
     // }
 
     public function login(Request $request)
-    {
-        $request->validate([
-            'phone' => 'required|regex:/^[0-9]+$/',
-            'password' => 'required|min:6',
-            'fcm_token' => 'required'
-        ]);
+{
+    $request->validate([
+        'phone' => 'required|regex:/^[0-9]+$/',
+        'password' => 'required|min:6',
+        'fcm_token' => 'required'
+    ]);
 
-        $user = User::withTrashed()->where('phone', $request->phone)->first();
-        if($user->is_verified!==1){
-            return response([
-                'message' => trans('auth.notVerified')
-            ], 403);
-        }
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response([
-                'message' => trans('auth.wrongLogin')
-            ], 403);
-        }
+    $user = User::withTrashed()->where('phone', $request->phone)->first();
 
-        $deletedAccount = DB::table('deleted_accounts')->where('phone', $request->phone)->first();
-
-        if ($deletedAccount) {
-            $deletionPeriod = Carbon::parse($deletedAccount->deleted_at)->addDays(20);
-
-            if (Carbon::now()->lessThanOrEqualTo($deletionPeriod)) {
-                $user->restore();
-                DB::table('deleted_accounts')->where('phone', $request->phone)->delete();
-            } else {
-                return response([
-                    'message' => trans('auth.NoAttachedN'),
-                ], 403);
-            }
-        }
-
-        $user->fcm_token = $request->fcm_token;
-        $user->save();
-
-        $user->type = $user->role == 0 ? 'admin' : 'user';
-
-        $token = $user->createToken('auth_token')->accessToken;
-
-        return response()->json([
-            'user' => $user,
-            'token' => $token
-        ]);
+    if (!$user || !Hash::check($request->password, $user->password)) {
+        return response([
+            'message' => trans('auth.wrongLogin')
+        ], 403);
     }
+
+    if ($user->is_verified !== 1) {
+        return response([
+            'message' => trans('auth.notVerified')
+        ], 403);
+    }
+
+    $deletedAccount = DB::table('deleted_accounts')->where('phone', $request->phone)->first();
+
+    if ($deletedAccount) {
+        $deletionPeriod = Carbon::parse($deletedAccount->deleted_at)->addDays(20);
+
+        if (Carbon::now()->lessThanOrEqualTo($deletionPeriod)) {
+            $user->restore();
+            DB::table('deleted_accounts')->where('phone', $request->phone)->delete();
+        } else {
+            return response([
+                'message' => trans('auth.NoAttachedN'),
+            ], 403);
+        }
+    }
+
+    // 🟢 هنا نمسح كل التوكنات السابقة
+    $user->tokens()->delete();
+
+    $user->fcm_token = $request->fcm_token;
+    $user->save();
+
+    $user->type = $user->role == 0 ? 'admin' : 'user';
+
+    // 🟢 إنشاء توكن جديد فقط للجهاز الحالي
+    $token = $user->createToken('auth_token')->accessToken;
+
+    return response()->json([
+        'user' => $user,
+        'token' => $token
+    ]);
+}
     public function userInfo()
     {
         return response()->json([
