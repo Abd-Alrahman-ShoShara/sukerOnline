@@ -8,6 +8,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
+use Storage;
 
 class ProductController extends Controller
 {
@@ -78,14 +79,10 @@ public function AddProduct(Request $request)
     ]);
 
     $imageUrls = [];
-
     if ($request->hasFile('images')) {
         foreach ($request->file('images') as $image) {
-            // يخزن داخل storage/app/public/uploads
             $path = $image->store('uploads', 'public');
-
-            // يولد رابط مباشر للوصول للصورة عبر public/storage
-            $imageUrls[] = asset('storage/' . $path);
+            $imageUrls[] = '/storage/' . $path;
         }
     }
 
@@ -95,11 +92,11 @@ public function AddProduct(Request $request)
         'type' => $request->type,
         'points' => $request->points,
         'description' => $request->input('description'),
-        'images' => $imageUrls ? json_encode($imageUrls) : null,
+        'images' => !empty($imageUrls) ? json_encode($imageUrls) : null,
         'is_public' => $request->is_public,
     ]);
 
-    if (!$request->is_public) {
+    if (!$request->is_public && $request->has('classifications')) {
         foreach ($request->input('classifications') as $classification) {
             ClassificationProduct::create([
                 'classification_id' => $classification,
@@ -107,6 +104,9 @@ public function AddProduct(Request $request)
             ]);
         }
     }
+
+    // فك JSON للصور قبل الإرسال
+    $product->images = $product->images ? json_decode($product->images, true) : [];
 
     return response()->json([
         'message' => trans('Complaints.Created'),
@@ -116,88 +116,168 @@ public function AddProduct(Request $request)
 
 
 
-     public function ProdctsDetails($product_id)
-    {
-        $iteam = Product::where('id', $product_id)->first();
+    //  public function ProdctsDetails($product_id)
+    // {
+    //     $iteam = Product::where('id', $product_id)->first();
 
-        if (!$iteam) {
-            return response()->json([
-                'message' => trans('product.noProduct'),
+    //     if (!$iteam) {
+    //         return response()->json([
+    //             'message' => trans('product.noProduct'),
 
-            ], 404);
-        }
+    //         ], 404);
+    //     }
+    //     return response()->json([
+
+    //         'the prodct:' => $iteam,
+    //     ], 200);
+    // }
+
+public function ProdctsDetails($product_id)
+{
+    $item = Product::where('id', $product_id)->first();
+
+    if (!$item) {
         return response()->json([
-
-            'the prodct:' => $iteam,
-        ], 200);
+            'message' => trans('product.noProduct'),
+        ], 404);
     }
 
+    // فك JSON للصور قبل الإرسال
+    $item->images = $item->images ? json_decode($item->images, true) : [];
 
+    return response()->json([
+        'the_product' => $item,
+    ], 200);
+}
+
+    // public function updateProduct(Request $request, $product_id)
+    // {
+    //     $product = Product::findOrFail($product_id);
+
+    //     $request->validate([
+    //         'name' => 'required|unique:products,name,' . $product->id,
+    //         'price' => 'required|numeric',
+    //         'description' => 'required',
+    //         'is_public' => 'required|boolean',
+    //         'classifications' => 'required_if:is_public,false|array',
+    //         'classifications.*' => 'required_if:is_public,false|string',
+    //         'type' => 'nullable|string',
+    //         'points' => 'required|integer',
+    //         'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
+    //     ]);
+
+    //     $imageUrls = [];
+    //     if ($request->hasFile('images')) {
+    //         // Delete old images
+    //         $oldImages = json_decode($product->images, true);
+    //         if ($oldImages) {
+    //             foreach ($oldImages as $oldImage) {
+    //                 if (file_exists(public_path($oldImage))) {
+    //                     unlink(public_path($oldImage));
+    //                 }
+    //             }
+    //         }
+
+    //         // Upload new images
+    //         foreach ($request->file('images') as $key => $image) {
+    //             $imageName = time() . $key . '.' . $image->extension();
+    //             $image->move(public_path('uploads/'), $imageName);
+    //             $imageUrls[] = URL::asset('uploads/' . $imageName);
+    //         }
+    //     } else {
+    //         $imageUrls = json_decode($product->images, true);
+    //     }
+
+
+    //     $product->update([
+    //         'name' => $request->input('name'),
+    //         'price' => $request->input('price'),
+    //         'type' => $request->type,
+    //         'points' => $request->points,
+    //         'description' => $request->input('description'),
+    //         'is_public' => $request->is_public,
+    //         'images' => $imageUrls ? json_encode($imageUrls) : null,
+    //     ]);
+
+
+    //     ClassificationProduct::where('product_id', $product->id)->delete();
+    //     if (!$request->is_public) {
+    //         foreach ($request->input('classifications') as $classification) {
+    //             ClassificationProduct::create([
+    //                 'classification_id' => $classification,
+    //                 'product_id' => $product->id,
+    //             ]);
+    //         }
+    //     }
+
+    //     return response()->json([
+    //         'message' => trans('normalOrder.updated'),
+    //         'product' => $product,
+    //     ], 200);
+    // }
     public function updateProduct(Request $request, $product_id)
-    {
-        $product = Product::findOrFail($product_id);
+{
+    $product = Product::findOrFail($product_id);
 
-        $request->validate([
-            'name' => 'required|unique:products,name,' . $product->id,
-            'price' => 'required|numeric',
-            'description' => 'required',
-            'is_public' => 'required|boolean',
-            'classifications' => 'required_if:is_public,false|array',
-            'classifications.*' => 'required_if:is_public,false|string',
-            'type' => 'nullable|string',
-            'points' => 'required|integer',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
-        ]);
+    $request->validate([
+        'name' => 'required',
+        'price' => 'required|numeric',
+        'description' => 'required',
+        'is_public' => 'required|boolean',
+        'classifications' => 'required_if:is_public,false|array',
+        'classifications.*' => 'required_if:is_public,false|string',
+        'type' => 'nullable|string',
+        'points' => 'required|integer',
+        'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
+    ]);
 
-        $imageUrls = [];
-        if ($request->hasFile('images')) {
-            // Delete old images
-            $oldImages = json_decode($product->images, true);
-            if ($oldImages) {
-                foreach ($oldImages as $oldImage) {
-                    if (file_exists(public_path($oldImage))) {
-                        unlink(public_path($oldImage));
-                    }
+    $imageUrls = $request->hasFile('images') ? [] : json_decode($product->images, true) ?? [];
+
+    if ($request->hasFile('images')) {
+        // حذف الصور القديمة
+        if ($product->images) {
+            foreach (json_decode($product->images, true) as $oldImage) {
+                $path = str_replace('/storage/', '', $oldImage);
+                if (Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
                 }
             }
-
-            // Upload new images
-            foreach ($request->file('images') as $key => $image) {
-                $imageName = time() . $key . '.' . $image->extension();
-                $image->move(public_path('uploads/'), $imageName);
-                $imageUrls[] = URL::asset('uploads/' . $imageName);
-            }
-        } else {
-            $imageUrls = json_decode($product->images, true);
         }
 
-
-        $product->update([
-            'name' => $request->input('name'),
-            'price' => $request->input('price'),
-            'type' => $request->type,
-            'points' => $request->points,
-            'description' => $request->input('description'),
-            'is_public' => $request->is_public,
-            'images' => $imageUrls ? json_encode($imageUrls) : null,
-        ]);
-
-
-        ClassificationProduct::where('product_id', $product->id)->delete();
-        if (!$request->is_public) {
-            foreach ($request->input('classifications') as $classification) {
-                ClassificationProduct::create([
-                    'classification_id' => $classification,
-                    'product_id' => $product->id,
-                ]);
-            }
+        foreach ($request->file('images') as $image) {
+            $path = $image->store('uploads', 'public');
+            $imageUrls[] = '/storage/' . $path;
         }
-
-        return response()->json([
-            'message' => trans('normalOrder.updated'),
-            'product' => $product,
-        ], 200);
     }
+
+    $product->update([
+        'name' => $request->input('name'),
+        'price' => $request->input('price'),
+        'type' => $request->type,
+        'points' => $request->points,
+        'description' => $request->input('description'),
+        'is_public' => $request->is_public,
+        'images' => !empty($imageUrls) ? json_encode($imageUrls) : null,
+    ]);
+
+    ClassificationProduct::where('product_id', $product->id)->delete();
+    if (!$request->is_public && $request->has('classifications')) {
+        foreach ($request->input('classifications') as $classification) {
+            ClassificationProduct::create([
+                'classification_id' => $classification,
+                'product_id' => $product->id,
+            ]);
+        }
+    }
+
+    // فك JSON للصور قبل الإرسال
+    $product->images = $product->images ? json_decode($product->images, true) : [];
+
+    return response()->json([
+        'message' => trans('normalOrder.updated'),
+        'product' => $product,
+    ], 200);
+}
 
     public function deleteProduct($product_id)
     {

@@ -11,112 +11,211 @@ use App\Services\FirebaseService;
 use App\Notifications\FirebasePushNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Storage;
 
 class PointsProductController extends Controller
 {
+    // public function AddPointsProduct(Request $request)
+    // {
+    //     $request->validate([
+    //         'name' => 'required|unique:products',
+    //         'price' => 'required|numeric',
+    //         'description' => 'required|string',
+    //         'quantity' => 'required|integer',
+    //         'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
+
+    //     ]);
+
+    //     $imageUrls = [];
+    //     if ($request->hasFile('images')) {
+    //         foreach ($request->file('images') as $key => $image) {
+    //             $imageName = time() . $key . '.' . $image->extension();
+    //             $image->move(public_path('uploads/'), $imageName);
+    //             $imageUrls[] = URL::asset('uploads/' . $imageName);
+    //         }
+    //     } else {
+    //         $imageUrls = null;
+    //     }
+
+    //     $pointsProduct = PointsProduct::create([
+    //         'name' => $request->input('name'),
+    //         'price' => $request->input('price'),
+    //         'description' => $request->input('description'),
+    //         'quantity' => $request->input('quantity'),
+    //         'images' => $imageUrls ? json_encode($imageUrls) : null,
+    //     ]);
+
+    //     return response()->json([
+    //         'message' => trans('Complaints.Created'),
+    //         'pointsProduct' => $pointsProduct,
+    //     ], 201);
+    // }
+
     public function AddPointsProduct(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|unique:products',
-            'price' => 'required|numeric',
-            'description' => 'required|string',
-            'quantity' => 'required|integer',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
+{
+    $request->validate([
+        'name' => 'required|unique:products',
+        'price' => 'required|numeric',
+        'description' => 'required|string',
+        'quantity' => 'required|integer',
+        'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
+    ]);
 
-        ]);
-
-        $imageUrls = [];
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $key => $image) {
-                $imageName = time() . $key . '.' . $image->extension();
-                $image->move(public_path('uploads/'), $imageName);
-                $imageUrls[] = URL::asset('uploads/' . $imageName);
-            }
-        } else {
-            $imageUrls = null;
+    $imageUrls = [];
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $image) {
+            $path = $image->store('uploads', 'public');
+            $imageUrls[] = '/storage/' . $path;
         }
-
-        $pointsProduct = PointsProduct::create([
-            'name' => $request->input('name'),
-            'price' => $request->input('price'),
-            'description' => $request->input('description'),
-            'quantity' => $request->input('quantity'),
-            'images' => $imageUrls ? json_encode($imageUrls) : null,
-        ]);
-
-        return response()->json([
-            'message' => trans('Complaints.Created'),
-            'pointsProduct' => $pointsProduct,
-        ], 201);
     }
 
-    public function pointsProductDetails($pointsProduct_id)
-    {
-        $pointsProduct = PointsProduct::find($pointsProduct_id);
+    $pointsProduct = PointsProduct::create([
+        'name' => $request->input('name'),
+        'price' => $request->input('price'),
+        'description' => $request->input('description'),
+        'quantity' => $request->input('quantity'),
+        'images' => !empty($imageUrls) ? json_encode($imageUrls) : null,
+    ]);
 
-        if (!$pointsProduct) {
-            return response()->json([
-                'message' => 'no iteam to desplay',
+    $pointsProduct->images = $pointsProduct->images ? json_decode($pointsProduct->images, true) : [];
 
-            ], 404);
-        }
+    return response()->json([
+        'message' => trans('Complaints.Created'),
+        'pointsProduct' => $pointsProduct,
+    ], 201);
+}
+
+public function pointsProductDetails($pointsProduct_id)
+{
+    $pointsProduct = PointsProduct::find($pointsProduct_id);
+
+    if (!$pointsProduct) {
         return response()->json([
-
-            'the prodct:' => $pointsProduct,
-        ], 200);
+            'message' => 'No item to display',
+        ], 404);
     }
 
+    $pointsProduct->images = $pointsProduct->images ? json_decode($pointsProduct->images, true) : [];
+
+    return response()->json([
+        'the_product' => $pointsProduct,
+    ], 200);
+}
+
+    // public function pointsProductDetails($pointsProduct_id)
+    // {
+    //     $pointsProduct = PointsProduct::find($pointsProduct_id);
+
+    //     if (!$pointsProduct) {
+    //         return response()->json([
+    //             'message' => 'no iteam to desplay',
+
+    //         ], 404);
+    //     }
+    //     return response()->json([
+
+    //         'the prodct:' => $pointsProduct,
+    //     ], 200);
+    // }
+
+
+    // public function updatePointsProduct(Request $request, $pointsProduct_id)
+    // {
+    //     $PointsProduct = PointsProduct::findOrFail($pointsProduct_id);
+
+    //     $request->validate([
+    //         'name' => 'required|unique:products,name,' . $PointsProduct->id,
+    //         'price' => 'required|numeric',
+    //         'description' => 'required',
+    //         'quantity' => 'required|integer',
+    //         'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
+    //     ]);
+
+
+    //     // Handle image uploads
+    //     $imageUrls = [];
+    //     if ($request->hasFile('images')) {
+    //         // Delete old images
+    //         $oldImages = json_decode($PointsProduct->images, true);
+    //         if ($oldImages) {
+    //             foreach ($oldImages as $oldImage) {
+    //                 if (file_exists(public_path($oldImage))) {
+    //                     unlink(public_path($oldImage));
+    //                 }
+    //             }
+    //         }
+
+    //         // Upload new images
+    //         foreach ($request->file('images') as $key => $image) {
+    //             $imageName = time() . $key . '.' . $image->extension();
+    //             $image->move(public_path('uploads/'), $imageName);
+    //             $imageUrls[] = URL::asset('uploads/' . $imageName);
+    //         }
+    //     } else {
+    //         $imageUrls = json_decode($PointsProduct->images, true);
+    //     }
+
+
+    //     $PointsProduct->update([
+    //         'name' => $request->input('name'),
+    //         'quantity' => $request->input('quantity'),
+    //         'price' => $request->input('price'),
+    //         'description' => $request->input('description'),
+    //         'images' => $imageUrls ? json_encode($imageUrls) : null,
+    //     ]);
+
+    //     return response()->json([
+    //         'message' => trans('normalOrder.updated'),
+    //         'PointsProduct' => $PointsProduct,
+    //     ], 200);
+    // }
 
     public function updatePointsProduct(Request $request, $pointsProduct_id)
-    {
-        $PointsProduct = PointsProduct::findOrFail($pointsProduct_id);
+{
+    $pointsProduct = PointsProduct::findOrFail($pointsProduct_id);
 
-        $request->validate([
-            'name' => 'required|unique:products,name,' . $PointsProduct->id,
-            'price' => 'required|numeric',
-            'description' => 'required',
-            'quantity' => 'required|integer',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
-        ]);
+    $request->validate([
+        'name' => 'required|unique:products,name,' . $pointsProduct->id,
+        'price' => 'required|numeric',
+        'description' => 'required|string',
+        'quantity' => 'required|integer',
+        'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,bmp|max:4096',
+    ]);
 
+    $imageUrls = $request->hasFile('images') ? [] : json_decode($pointsProduct->images, true) ?? [];
 
-        // Handle image uploads
-        $imageUrls = [];
-        if ($request->hasFile('images')) {
-            // Delete old images
-            $oldImages = json_decode($PointsProduct->images, true);
-            if ($oldImages) {
-                foreach ($oldImages as $oldImage) {
-                    if (file_exists(public_path($oldImage))) {
-                        unlink(public_path($oldImage));
-                    }
+    if ($request->hasFile('images')) {
+        // حذف الصور القديمة
+        if ($pointsProduct->images) {
+            foreach (json_decode($pointsProduct->images, true) as $oldImage) {
+                $path = str_replace('/storage/', '', $oldImage);
+                if (Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
                 }
             }
-
-            // Upload new images
-            foreach ($request->file('images') as $key => $image) {
-                $imageName = time() . $key . '.' . $image->extension();
-                $image->move(public_path('uploads/'), $imageName);
-                $imageUrls[] = URL::asset('uploads/' . $imageName);
-            }
-        } else {
-            $imageUrls = json_decode($PointsProduct->images, true);
         }
 
-
-        $PointsProduct->update([
-            'name' => $request->input('name'),
-            'quantity' => $request->input('quantity'),
-            'price' => $request->input('price'),
-            'description' => $request->input('description'),
-            'images' => $imageUrls ? json_encode($imageUrls) : null,
-        ]);
-
-        return response()->json([
-            'message' => trans('normalOrder.updated'),
-            'PointsProduct' => $PointsProduct,
-        ], 200);
+        foreach ($request->file('images') as $image) {
+            $path = $image->store('uploads', 'public');
+            $imageUrls[] = '/storage/' . $path;
+        }
     }
+
+    $pointsProduct->update([
+        'name' => $request->input('name'),
+        'price' => $request->input('price'),
+        'description' => $request->input('description'),
+        'quantity' => $request->input('quantity'),
+        'images' => !empty($imageUrls) ? json_encode($imageUrls) : null,
+    ]);
+
+    $pointsProduct->images = $pointsProduct->images ? json_decode($pointsProduct->images, true) : [];
+
+    return response()->json([
+        'message' => trans('normalOrder.updated'),
+        'pointsProduct' => $pointsProduct,
+    ], 200);
+}
 
     public function deletePointsProduct($PointsProduct_id)
     {
