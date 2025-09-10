@@ -12,7 +12,7 @@ class FirebaseService
     public function __construct()
     {
         // 🔹 اقرأ المسار من .env
-        $serviceAccountPath = storage_path(env('FIREBASE_CREDENTIALS_PATH'));
+    $serviceAccountPath = base_path(env('FIREBASE_CREDENTIALS_PATH'));
 
         if (!file_exists($serviceAccountPath)) {
             throw new \Exception("Firebase service account file not found at: " . $serviceAccountPath);
