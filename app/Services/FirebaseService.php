@@ -1,9 +1,10 @@
 <?php
 
-
 namespace App\Services;
 
 use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
 use Illuminate\Support\Facades\Log;
 
 class FirebaseService
@@ -12,42 +13,35 @@ class FirebaseService
 
     public function __construct()
     {
-        $jsonCredentials = env('FIREBASE_CREDENTIALS_JSON');
+        // المسار الجديد للملف
+        $serviceAccountPath = storage_path('app/firebase/sukeronline-122b5-firebase-adminsdk-a34cj-020b7ceff5.json');
 
-        if (!$jsonCredentials) {
-            throw new \Exception('Firebase credentials not found in .env');
+        if (!file_exists($serviceAccountPath)) {
+            throw new \Exception("Firebase service account file not found at: {$serviceAccountPath}");
         }
 
-        $decodedCredentials = json_decode($jsonCredentials, true);
-
-        if (!$decodedCredentials) {
-            throw new \Exception('Invalid Firebase credentials JSON format');
-        }
-
-        $factory = (new Factory)->withServiceAccount($decodedCredentials);
+        $factory = (new Factory)->withServiceAccount($serviceAccountPath);
         $this->messaging = $factory->createMessaging();
     }
 
     public function sendNotification($deviceToken, $title, $body, $data = [])
     {
         try {
-            $message = [
-                'token' => $deviceToken,
-                'notification' => [
-                    'title' => $title,
-                    'body' => $body,
-                ],
-                'data' => $data,
-            ];
+            $notification = Notification::create($title, $body);
+
+            $message = CloudMessage::withTarget('token', $deviceToken)
+                ->withNotification($notification)
+                ->withData($data);
 
             $this->messaging->send($message);
-            Log::info("✅ Notification sent to token: {$deviceToken}");
 
+            Log::info("✅ Notification sent successfully to token: {$deviceToken}");
         } catch (\Exception $e) {
-            Log::error("🔥 FCM Error: ".$e->getMessage());
+            Log::error("🔥 FCM Error: " . $e->getMessage());
         }
     }
 }
+
 
 // namespace App\Services;
 
